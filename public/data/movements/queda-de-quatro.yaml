@@ -1,0 +1,52 @@
+id: queda-de-quatro
+name: Queda de quatro
+translation: queda apoiada nas quatro (mãos e pés)
+category: esquiva
+side: right
+summary: >-
+  Uma fuga caindo para trás sobre as duas mãos e os dois pés, com a barriga
+  para cima, como um caranguejo. Tira o corpo do alcance de um chute ou de um
+  empurrão e deixa o capoeirista sair andando ou contra-atacar do chão.
+steps:
+  - Da ginga, leve o quadril para trás e para baixo, como se fosse sentar numa cadeira.
+  - Leve as duas mãos para trás e apoie no chão, com os dedos apontando para trás.
+  - Distribua o peso entre mãos e pés, barriga para cima, joelhos sobre os pés.
+  - Mantenha o queixo recolhido e os olhos no camarada.
+  - Empurre o chão com as mãos, traga o peso de volta para os pés e suba para a ginga.
+tips:
+  - Chegue com as mãos no chão de forma suave, cotovelos levemente dobrados; não caia em cima dos punhos.
+  - Da queda de quatro, uma bênção baixa ou uma tesoura são respostas comuns.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.4
+    pose: parallel
+    label: paralela
+  - t: 0.85
+    pose: parallel
+    label: queda de quatro
+    root: { pitch: -50 }
+    torso: { flex: 10, side: 0, twist: 0 }
+    head: { flex: 35 }
+    hip_l: { flex: 70, abd: 15, rot: 0 }
+    knee_l: 120
+    ankle_l: 0
+    hip_r: { flex: 70, abd: 15, rot: 0 }
+    knee_r: 120
+    ankle_r: 0
+    shoulder_l: { flex: -70, abd: 18, rot: 0 }
+    elbow_l: 8
+    shoulder_r: { flex: -70, abd: 18, rot: 0 }
+    elbow_r: 8
+  - t: 1.45
+    label: segura
+  - t: 1.95
+    pose: parallel
+    label: paralela
+  - t: 2.35
+    pose: base_r
+    label: base — pé direito atrás

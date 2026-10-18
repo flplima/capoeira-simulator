@@ -1,0 +1,64 @@
+id: negativa
+name: Negativa
+translation: negação, recusa
+category: esquiva
+side: right
+summary: >-
+  Uma esquiva baixa que leva o corpo quase ao chão: uma perna se dobra por
+  baixo, a outra se estende rente ao solo, uma mão sustenta o peso e o outro
+  braço protege o rosto. É também a porta de entrada para o rolê e para as
+  rasteiras.
+steps:
+  - Da ginga, desça sobre a perna esquerda, dobrando-a por completo até o quadril chegar perto do chão.
+  - Estenda a perna direita à frente, rente ao chão, com o calcanhar apoiado.
+  - Apoie a mão direita no chão ao lado do quadril direito para sustentar o peso.
+  - Incline o tronco baixo sobre a perna estendida e cubra o rosto com o antebraço esquerdo.
+  - Empurre o chão com a mão, recolha a perna direita e suba para a base.
+tips:
+  - Fique baixo e fechado; não sente no chão — o quadril fica suspenso.
+  - Mantenha os olhos no camarada; a negativa costuma ser seguida de um rolê ou de uma rasteira.
+  - Nas sequências de Mestre Bimba, a negativa geralmente vem seguida de uma cabeçada.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.4
+    pose: parallel
+    label: descendo
+    root: { pitch: 18 }
+    torso: { flex: 30 }
+    hip_l: { flex: 100, abd: 15, rot: 0 }
+    knee_l: 120
+    ankle_l: -38
+    hip_r: { flex: 62, abd: 24, rot: 0 }
+    knee_r: 35
+    ankle_r: 9
+  - t: 0.8
+    pose: parallel
+    label: negativa
+    root: { pitch: 20, roll: -18 }
+    torso: { flex: 35, side: -15, twist: -20 }
+    head: { flex: -40, side: 12 }
+    hip_l: { flex: 110, abd: 22, rot: 0 }
+    knee_l: 160
+    ankle_l: -45
+    hip_r: { flex: 95, abd: 25, rot: 0 }
+    knee_r: 0
+    ankle_r: -10
+    shoulder_r: { flex: 50, abd: 35, rot: 0 }
+    elbow_r: 0
+    shoulder_l: { flex: 110, abd: 15, rot: 50 }
+    elbow_l: 120
+  - t: 1.4
+    label: segura
+  - t: 1.9
+    pose: parallel
+    label: subindo
+  - t: 2.3
+    pose: base_r
+    label: base — pé direito atrás

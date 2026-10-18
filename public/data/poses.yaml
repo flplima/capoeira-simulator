@@ -1,0 +1,67 @@
+# Named body shapes shared by the movements. A keyframe starts from one of these
+# with `pose: <name>` and overrides individual joints. An entry can build on
+# another (`pose:`) or on the mirror image of another (`mirror:`).
+#
+# Angles are degrees relative to standing straight with arms hanging; see the
+# README for the sign of every field. A foot is flat on the floor when
+# ankle = hip.flex - knee - root.pitch. The ginga poses tip the pelvis forward
+# (root.pitch), which also raises hip.flex by the same amount.
+
+poses:
+  stand:
+    shoulder_l: { abd: 8 }
+    shoulder_r: { abd: 8 }
+    elbow_l: 12
+    elbow_r: 12
+
+  # Paralela: feet well beyond shoulder width, knees bent, weight low, torso
+  # leaning in, both forearms up in front of the chest and chin.
+  parallel:
+    root: { pitch: 10 }
+    torso: { flex: 26 }
+    head: { flex: -32 }
+    hip_l: { flex: 52, abd: 17, rot: 10 }
+    knee_l: 68
+    ankle_l: -26
+    hip_r: { flex: 52, abd: 17, rot: 10 }
+    knee_r: 68
+    ankle_r: -26
+    shoulder_l: { flex: 68, abd: 22, rot: 40 }
+    elbow_l: 112
+    shoulder_r: { flex: 68, abd: 22, rot: 40 }
+    elbow_r: 112
+
+  # Base of the ginga: a long stance — right foot far back on its ball with the
+  # leg almost straight, left knee bent over the left foot, torso leaning well
+  # forward with the eyes up, right forearm across the face, left arm reaching
+  # back and out.
+  base_r:
+    root: { pitch: 15 }
+    torso: { flex: 35 }
+    head: { flex: -45 }
+    hip_l: { flex: 68, abd: 12, rot: 5 }
+    knee_l: 78
+    ankle_l: -25
+    hip_r: { flex: -25, abd: 12, rot: 15 }
+    knee_r: 18
+    ankle_r: -8
+    shoulder_r: { flex: 95, abd: 12, rot: 55 }
+    elbow_r: 115
+    shoulder_l: { flex: -10, abd: 42 }
+    elbow_l: 18
+
+  base_l:
+    mirror: base_r
+
+  # The base as the ginga itself steps it: the back foot crosses diagonally
+  # behind to the back corner of the floor triangle (see ginga.yaml), the
+  # front foot stays on its front corner. The keyframes in ginga.yaml turn the
+  # hips 20° toward the back leg (placement lives in keyframes, not poses).
+  ginga_r:
+    pose: base_r
+    hip_l: { abd: 16, rot: 3 }
+    hip_r: { flex: -23, abd: -20, rot: 21 }
+    knee_r: 15
+
+  ginga_l:
+    mirror: ginga_r

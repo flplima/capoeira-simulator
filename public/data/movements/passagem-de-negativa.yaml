@@ -1,0 +1,76 @@
+id: passagem-de-negativa
+name: Passagem de Negativa
+translation: troca baixa de negativa pelo chão
+category: esquiva
+side: right
+summary: >-
+  Uma transição rasteira entre as duas negativas: o capoeirista desce na negativa
+  de um lado, recolhe e troca a perna estendida passando rente ao chão para a
+  negativa oposta antes de subir de volta à ginga, enganando a varredura ou
+  preparando um contra-ataque baixo.
+steps:
+  - Da base, desça na negativa apoiando a mão direita no solo e estendendo a perna direita à frente.
+  - "Apoie as duas mãos por um instante e troque rente ao chão — recolha a perna direita flexionada e estenda a esquerda."
+  - Transfira o apoio para a mão esquerda enquanto o braço direito assume a guarda do rosto.
+  - Recolha a perna estendida, empurre o solo e suba de volta para a base da ginga.
+tips:
+  - A troca acontece sem levantar o quadril — deslize baixo entre os dois lados.
+  - Os braços de apoio e de guarda se invertem junto com as pernas.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.65
+    pose: parallel
+    label: negativa à direita
+    root: { pitch: 20, roll: -16 }
+    torso: { flex: 34, side: -14, twist: -18 }
+    head: { flex: -36, side: 10 }
+    hip_l: { flex: 108, abd: 22, rot: 0 }
+    knee_l: 152
+    ankle_l: -40
+    hip_r: { flex: 90, abd: 24, rot: 0 }
+    knee_r: 12
+    ankle_r: -10
+    shoulder_r: { flex: 50, abd: 35, rot: 0 }
+    elbow_r: 10
+    shoulder_l: { flex: 75, abd: 30, rot: 25 }
+    elbow_l: 85
+  - t: 1.15
+    pose: parallel
+    label: passagem baixa no centro
+    root: { pitch: 24, roll: 0 }
+    torso: { flex: 38, side: 0, twist: 0 }
+    head: { flex: -36, side: 0 }
+    hip_l: { flex: 112, abd: 22, rot: 0 }
+    knee_l: 145
+    ankle_l: -32
+    hip_r: { flex: 112, abd: 22, rot: 0 }
+    knee_r: 145
+    ankle_r: -32
+    shoulder_l: { flex: 45, abd: 40, rot: 0 }
+    elbow_l: 20
+    shoulder_r: { flex: 45, abd: 40, rot: 0 }
+    elbow_r: 20
+  - t: 1.65
+    pose: parallel
+    label: negativa à esquerda
+    root: { pitch: 20, roll: 16 }
+    torso: { flex: 34, side: 14, twist: 18 }
+    head: { flex: -36, side: -10 }
+    hip_r: { flex: 108, abd: 22, rot: 0 }
+    knee_r: 152
+    ankle_r: -40
+    hip_l: { flex: 90, abd: 24, rot: 0 }
+    knee_l: 12
+    ankle_l: -10
+    shoulder_l: { flex: 50, abd: 35, rot: 0 }
+    elbow_l: 10
+    shoulder_r: { flex: 75, abd: 30, rot: 25 }
+    elbow_r: 85
+  - t: 2.25
+    pose: base_r
+    label: subida na base

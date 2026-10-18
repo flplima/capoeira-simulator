@@ -1,0 +1,92 @@
+id: meia-lua-de-compasso
+name: Meia-lua de compasso
+aka: [rabo de arraia, compasso]
+translation: meia-lua de compasso (a perna traça um círculo como um compasso de desenho)
+category: ataque circular
+side: right
+summary: >-
+  O golpe giratório de calcanhar mais característico da capoeira. As duas mãos
+  vão ao chão, os olhos encontram o camarada por baixo do braço e a perna de
+  trás varre um círculo largo na altura da cabeça enquanto o corpo gira sobre
+  o pé da frente. Quem dá a força é o giro, não a perna.
+steps:
+  - Da ginga com o pé direito atrás, gire o pé esquerdo (da frente) para dentro e dobre o tronco para baixo.
+  - Apoie as duas mãos no chão ao lado do pé esquerdo e olhe o camarada por baixo do braço direito.
+  - Continue girando para a direita; levante a perna direita esticada, para o lado e para cima.
+  - Varra a perna num círculo completo na altura da cabeça, batendo com o calcanhar.
+  - Desça a perna atrás, levante o tronco e volte à ginga de frente para o camarada.
+tips:
+  - Olhe o camarada durante todo o giro — com as mãos no chão, os olhos ficam livres para acompanhá-lo.
+  - A batida da mão no chão começa o giro; o calcanhar termina.
+  - Na sexta sequência de Mestre Bimba é respondida com cocorinha — e o compasso responde com outro compasso.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+loop: false
+rest: 0.4
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base da ginga
+  - t: 0.35
+    label: mãos descem, olha por baixo do braço
+    root: { yaw: -60, pitch: 42, roll: 8 }
+    torso: { flex: 24, side: 8, twist: -15 }
+    head: { flex: -32, twist: -25 }
+    hip_l: { flex: 62, abd: 12, rot: 20 }
+    knee_l: 42
+    ankle_l: -12
+    hip_r: { flex: 45, abd: 35, rot: 0 }
+    knee_r: 40
+    ankle_r: -5
+    shoulder_l: { flex: 92, abd: 15, rot: 0 }
+    elbow_l: 15
+    shoulder_r: { flex: 92, abd: 15, rot: 0 }
+    elbow_r: 15
+  - t: 0.58
+    label: perna sobe pelo lado
+    root: { yaw: -88, pitch: 48, roll: 24 }
+    torso: { flex: 22, side: 14, twist: -20 }
+    head: { flex: -28, twist: -35 }
+    hip_l: { flex: 58, abd: 12, rot: 25 }
+    knee_l: 28
+    ankle_l: -5
+    hip_r: { flex: 32, abd: 78, rot: -15 }
+    knee_r: 8
+    ankle_r: -10
+  - t: 0.78
+    label: calcanhar acerta na altura da cabeça
+    root: { yaw: -75, pitch: 45, roll: 32 }
+    torso: { flex: 20, side: 18, twist: -15 }
+    head: { flex: -25, side: -18, twist: -28 }
+    hip_l: { flex: 55, abd: 14, rot: 20 }
+    knee_l: 22
+    ankle_l: 5
+    hip_r: { flex: 78, abd: 88, rot: -15 }
+    knee_r: 5
+    ankle_r: -20
+    shoulder_l: { flex: 95, abd: 18, rot: 0 }
+    elbow_l: 15
+    shoulder_r: { flex: 95, abd: 12, rot: 0 }
+    elbow_r: 15
+  - t: 1.02
+    label: perna desce varrendo
+    root: { yaw: -35, pitch: 28, roll: 8 }
+    torso: { flex: 16, side: 4, twist: -8 }
+    head: { flex: -20, side: 0, twist: -15 }
+    hip_l: { flex: 42, abd: 10, rot: 8 }
+    knee_l: 36
+    ankle_l: -12
+    hip_r: { flex: 35, abd: 42, rot: 0 }
+    knee_r: 28
+    ankle_r: 0
+    shoulder_l: { flex: 55, abd: 20 }
+    elbow_l: 35
+    shoulder_r: { flex: 75, abd: 15, rot: 40 }
+    elbow_r: 95
+  - t: 1.45
+    pose: base_r
+    root: { yaw: 0 }
+    label: volta à ginga

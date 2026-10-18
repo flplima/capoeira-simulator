@@ -1,0 +1,96 @@
+id: queixada
+name: Queixada
+aka: []
+translation: golpe no queixo
+category: ataque circular
+side: right
+summary: >-
+  Um golpe circular que é o inverso da meia-lua de frente: depois de um passo
+  à frente que gira o quadril, a perna de trás sobe cruzando o corpo e passa
+  de dentro para fora, acertando o queixo ou a bochecha com a lateral externa
+  do pé.
+steps:
+  - Na base com o pé direito atrás, dê um passo à frente com o pé esquerdo virando a ponta para fora, girando o quadril para a esquerda.
+  - Suba a perna direita pela frente do corpo, cruzando a linha do centro.
+  - Passe a perna para fora na altura da cabeça, de dentro para fora, enquanto o quadril volta.
+  - Deixe a perna descer do lado direito e volte para a base.
+tips:
+  - O passo à frente gera o giro; a perna é solta, não forçada.
+  - Acerte com a lateral externa do pé e mantenha o joelho quase esticado no topo.
+  - Mantenha a guarda alta e olhe para o camarada por cima do ombro, não para o chão.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+loop: false
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.32
+    label: passo à frente, quadril gira para a esquerda
+    root: { z: 0.14, yaw: 35, pitch: 6, roll: 0 }
+    torso: { flex: 12, side: 0, twist: -22 }
+    head: { flex: -16, twist: -24 }
+    hip_l: { flex: 32, abd: 10, rot: -15 }
+    knee_l: 38
+    ankle_l: -12
+    hip_r: { flex: 35, abd: 12, rot: 0 }
+    knee_r: 55
+    ankle_r: 20
+    shoulder_r: { flex: 95, abd: 12, rot: 55 }
+    elbow_r: 115
+    shoulder_l: { flex: 20, abd: 55, rot: 0 }
+    elbow_l: 40
+  - t: 0.55
+    label: perna sobe cruzando o corpo
+    root: { z: 0.16, yaw: 30, pitch: -4 }
+    torso: { flex: 8, twist: -20 }
+    head: { flex: -8, twist: -22 }
+    hip_l: { flex: 22, abd: 8, rot: -12 }
+    knee_l: 26
+    ankle_l: 8
+    hip_r: { flex: 98, abd: -10, rot: 0 }
+    knee_r: 16
+    ankle_r: 10
+    shoulder_r: { flex: 40, abd: 100, rot: 0 }
+    elbow_r: 60
+    shoulder_l: { flex: 40, abd: 95, rot: 0 }
+    elbow_l: 60
+  - t: 0.74
+    label: topo do arco, de dentro para fora
+    root: { z: 0.16, yaw: 18, pitch: -8 }
+    torso: { flex: 6, twist: -12 }
+    head: { flex: 2, twist: -10 }
+    hip_l: { flex: 20, abd: 8, rot: 0 }
+    knee_l: 22
+    ankle_l: 6
+    hip_r: { flex: 118, abd: 12 }
+    knee_r: 4
+  - t: 0.92
+    label: passa para o lado de fora
+    root: { z: 0.14, yaw: 5, pitch: -6, roll: 12 }
+    torso: { flex: 6, twist: 0, side: -10 }
+    head: { flex: 0, twist: 0, side: 6 }
+    hip_r: { flex: 105, abd: 48 }
+    knee_r: 6
+  - t: 1.12
+    label: desce a perna
+    root: { z: 0.08, yaw: 0, pitch: 6, roll: 0 }
+    torso: { flex: 16, side: 0 }
+    head: { flex: -18, side: 0 }
+    hip_l: { flex: 34, abd: 8 }
+    knee_l: 42
+    ankle_l: -12
+    hip_r: { flex: 25, abd: 28 }
+    knee_r: 35
+    ankle_r: 10
+    shoulder_r: { flex: 85, abd: 15, rot: 50 }
+    elbow_r: 110
+    shoulder_l: { flex: 10, abd: 45, rot: 0 }
+    elbow_l: 30
+  - t: 1.45
+    pose: base_r
+    label: volta para a base
+    root: { z: 0 }

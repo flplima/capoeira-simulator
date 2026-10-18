@@ -1,0 +1,66 @@
+id: cocorinha
+name: Cocorinha
+aka: [cócoras]
+translation: agachadinha, de cócoras
+category: esquiva
+side: right
+summary: >-
+  A esquiva agachada básica da Capoeira Regional. O capoeirista desce reto
+  sobre os pés chapados, fechando o corpo com os joelhos junto ao peito, um
+  braço cobrindo a cabeça e a outra mão no chão para equilibrar.
+steps:
+  - Da ginga, traga os pés para a paralela, mais ou menos na largura do quadril.
+  - Desça reto num agachamento profundo, mantendo os calcanhares no chão.
+  - Traga os joelhos para junto do peito para fechar o corpo.
+  - Cubra a cabeça e a lateral do tronco com o braço direito; apoie a mão esquerda espalmada no chão ao lado.
+  - Suba de volta para a paralela e siga na ginga.
+tips:
+  - Mantenha os pés chapados — na ponta dos pés você é fácil de derrubar.
+  - Nas sequências de Mestre Bimba, quase todo golpe é respondido primeiro com uma cocorinha.
+  - A cocorinha era um dos três exercícios do exame de admissão de Bimba, junto com a queda de rins e a ponte.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.45
+    pose: parallel
+    label: cocorinha
+    root: { pitch: 22 }
+    torso: { flex: 38, side: 0, twist: 0 }
+    head: { flex: -42 }
+    hip_l: { flex: 102, abd: 28, rot: 8 }
+    knee_l: 118
+    ankle_l: -35
+    hip_r: { flex: 102, abd: 28, rot: 8 }
+    knee_r: 118
+    ankle_r: -35
+    shoulder_r: { flex: 145, abd: 42, rot: 60 }
+    elbow_r: 105
+    shoulder_l: { flex: 65, abd: 45, rot: 0 }
+    elbow_l: 25
+  - t: 0.85
+    label: segura
+  - t: 1.3
+    pose: parallel
+    label: subindo
+    root: { pitch: 16 }
+    torso: { flex: 24, side: 0, twist: 0 }
+    head: { flex: -32 }
+    hip_l: { flex: 72, abd: 20, rot: 5 }
+    knee_l: 85
+    ankle_l: -25
+    hip_r: { flex: 72, abd: 20, rot: 5 }
+    knee_r: 85
+    ankle_r: -25
+    shoulder_r: { flex: 115, abd: 30, rot: 55 }
+    elbow_r: 110
+    shoulder_l: { flex: 45, abd: 32, rot: 0 }
+    elbow_l: 30
+  - t: 1.8
+    pose: base_r
+    label: base — pé direito atrás

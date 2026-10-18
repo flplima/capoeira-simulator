@@ -1,0 +1,73 @@
+id: meia-lua-de-frente
+name: Meia-lua de frente
+aka: []
+translation: meia-lua pela frente
+category: ataque circular
+side: right
+summary: >-
+  Um golpe circular saído da ginga: a perna de trás sobe esticada por fora,
+  passa na frente do rosto do camarada de fora para dentro e volta para a
+  base. Muito usado para medir a distância ou preparar outro ataque.
+steps:
+  - Na base com o pé direito atrás, passe o peso para a perna da frente (esquerda).
+  - Suba a perna direita esticada, abrindo para o lado direito.
+  - Passe a perna na altura da cabeça, de fora para dentro, girando o quadril junto.
+  - Deixe a perna passar da linha do centro e depois desça de volta para a base.
+  - Mantenha o braço de guarda na frente do rosto o tempo todo.
+tips:
+  - A perna fica esticada; a força vem do quadril, não de estalar o joelho.
+  - Mantenha o joelho de apoio levemente dobrado e o pé de apoio inteiro no chão.
+  - Volte direto para a ginga, para o próximo movimento já estar pronto.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+loop: false
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.35
+    label: abre a perna para fora
+    root: { pitch: 6 }
+    torso: { flex: 10 }
+    head: { flex: -16 }
+    hip_l: { flex: 32, abd: 10, rot: 0 }
+    knee_l: 35
+    ankle_l: -10
+    hip_r: { flex: 55, abd: 48, rot: 0 }
+    knee_r: 12
+    ankle_r: 15
+  - t: 0.6
+    label: topo do arco, por fora do rosto
+    root: { pitch: -8, roll: 8 }
+    torso: { flex: 8, side: 6, twist: 6 }
+    head: { flex: 0, side: -6 }
+    hip_l: { flex: 20, abd: 8 }
+    knee_l: 25
+    ankle_l: 2
+    hip_r: { flex: 118, abd: 32 }
+    knee_r: 4
+    ankle_r: 10
+  - t: 0.78
+    label: passa de fora para dentro
+    root: { pitch: -6, roll: 4 }
+    torso: { flex: 8, side: 2, twist: 14 }
+    head: { side: -2 }
+    hip_r: { flex: 112, abd: -8 }
+    knee_r: 6
+  - t: 1.0
+    label: acompanha e desce
+    root: { pitch: 4, roll: 0 }
+    torso: { flex: 12, side: 0, twist: 6 }
+    head: { flex: -14, side: 0 }
+    hip_l: { flex: 30, abd: 8 }
+    knee_l: 35
+    ankle_l: -10
+    hip_r: { flex: 55, abd: 12 }
+    knee_r: 45
+    ankle_r: 10
+  - t: 1.4
+    pose: base_r
+    label: volta para a base

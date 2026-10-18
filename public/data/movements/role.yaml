@@ -1,0 +1,77 @@
+id: role
+name: Rolê
+translation: giro baixo pelo chão
+category: esquiva
+side: right
+summary: >-
+  O deslocamento de solo mais característico da capoeira: saindo da esquiva ou
+  da cocorinha, o capoeirista apoia as mãos no chão, gira o quadril baixo sobre
+  mãos e pés sem perder o parceiro de vista e levanta de volta na ginga em outro
+  ponto da roda.
+steps:
+  - Da base, desça flexionando os joelhos e incline o tronco lateralmente buscando o solo com as mãos.
+  - Apoie as duas mãos no chão à largura dos ombros e gire o quadril passando as pernas por trás.
+  - Olhe por baixo do braço ou por cima do ombro durante todo o giro mantendo o contato visual.
+  - Puxe os pés para perto das mãos, empurre o chão e suba de volta para a base da ginga.
+tips:
+  - Nunca dê as costas cegas ao camarada — a cabeça acompanha o parceiro por baixo da guarda.
+  - O quadril passa baixo e leve, sustentado pelos braços firmes no chão.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.45
+    pose: parallel
+    label: descida lateral
+    root: { yaw: -60, pitch: 28, roll: -12 }
+    torso: { flex: 32, side: -12, twist: -15 }
+    head: { flex: -28, twist: 20 }
+    hip_l: { flex: 95, abd: 22, rot: 0 }
+    knee_l: 120
+    ankle_l: -30
+    hip_r: { flex: 75, abd: 20, rot: 0 }
+    knee_r: 95
+    ankle_r: -20
+    shoulder_l: { flex: 55, abd: 35, rot: 0 }
+    elbow_l: 25
+    shoulder_r: { flex: 65, abd: 30, rot: 0 }
+    elbow_r: 20
+  - t: 1.0
+    pose: parallel
+    label: apoio de mãos no giro (180°)
+    root: { yaw: -180, pitch: 42, roll: 0 }
+    torso: { flex: 36, side: 0, twist: 0 }
+    head: { flex: -36, twist: 0 }
+    hip_l: { flex: 92, abd: 24, rot: 0 }
+    knee_l: 118
+    ankle_l: -25
+    hip_r: { flex: 92, abd: 24, rot: 0 }
+    knee_r: 118
+    ankle_r: -25
+    shoulder_l: { flex: 70, abd: 25, rot: 0 }
+    elbow_l: 15
+    shoulder_r: { flex: 70, abd: 25, rot: 0 }
+    elbow_r: 15
+  - t: 1.55
+    pose: parallel
+    label: recolhendo os pés (280°)
+    root: { yaw: -280, pitch: 26, roll: 10 }
+    torso: { flex: 30, side: 10, twist: 14 }
+    head: { flex: -26, twist: -18 }
+    hip_l: { flex: 80, abd: 20, rot: 0 }
+    knee_l: 105
+    ankle_l: -24
+    hip_r: { flex: 95, abd: 22, rot: 0 }
+    knee_r: 120
+    ankle_r: -30
+    shoulder_l: { flex: 55, abd: 30, rot: 0 }
+    elbow_l: 25
+    shoulder_r: { flex: 50, abd: 35, rot: 0 }
+    elbow_r: 30
+  - t: 2.15
+    pose: base_r
+    label: subida na base (360°)
+    root: { yaw: -360 }

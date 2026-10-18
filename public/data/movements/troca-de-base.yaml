@@ -1,0 +1,57 @@
+id: troca-de-base
+name: Troca de Base
+translation: inversão rápida da perna de trás
+category: esquiva
+side: right
+summary: >-
+  Uma mudança rápida de guarda a partir da base da ginga: em vez de percorrer
+  todo o ciclo passando devagar pela paralela, o capoeirista recolhe e troca os
+  pés num salto curto e baixo, invertendo a perna de trás para quebrar o tempo
+  e abrir um novo ângulo de saída.
+steps:
+  - Da base com o pé direito atrás, flexione os dois joelhos impulsionando levemente o quadril.
+  - Recolha o pé direito à frente enquanto o pé esquerdo recua rente ao chão num salto curto.
+  - Inverta os braços da guarda acompanhando a troca das pernas.
+  - Aterrisse amortecendo na ponta do pé esquerdo atrás, na base oposta, e retorne quando quiser.
+tips:
+  - O salto é rasante e elástico — os pés mal saem do chão para não perder a base.
+  - Troque os braços da guarda no mesmo instante em que os pés se cruzam.
+  - Excelente para surpreender o parceiro saindo com um golpe do lado inesperado.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.35
+    pose: parallel
+    label: impulso na paralela
+    root: { pitch: 14 }
+    torso: { flex: 16 }
+    hip_l: { flex: 48, abd: 12, rot: 0 }
+    knee_l: 68
+    ankle_l: -22
+    hip_r: { flex: 48, abd: 12, rot: 0 }
+    knee_r: 68
+    ankle_r: -22
+  - t: 0.75
+    pose: base_l
+    label: troca — pé esquerdo atrás
+  - t: 1.25
+    pose: base_l
+    label: sustenta a nova base
+  - t: 1.65
+    pose: parallel
+    label: retorno rápido
+    root: { pitch: 14 }
+    torso: { flex: 16 }
+    hip_l: { flex: 48, abd: 12, rot: 0 }
+    knee_l: 68
+    ankle_l: -22
+    hip_r: { flex: 48, abd: 12, rot: 0 }
+    knee_r: 68
+    ankle_r: -22
+  - t: 2.05
+    pose: base_r
+    label: base — pé direito atrás

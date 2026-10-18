@@ -1,0 +1,20 @@
+import { parse } from "yaml";
+import { z } from "zod";
+import { MovementTextSchema, type MovementText } from "./schema";
+import type { ReadText } from "./load";
+
+export type { MovementText };
+
+/** The text of some movement files (name, how to do it, tips, sources), without compiling their keyframes. */
+export async function loadTexts<Id extends string>(read: ReadText, ids: Id[]): Promise<Partial<Record<Id, MovementText>>> {
+  const texts: Partial<Record<Id, MovementText>> = {};
+  await Promise.all(
+    ids.map(async (id) => {
+      const path = `movements/${id}.yaml`;
+      const result = MovementTextSchema.safeParse(parse(await read(path)));
+      if (!result.success) throw new Error(`${path}: ${z.prettifyError(result.error)}`);
+      texts[id] = result.data;
+    }),
+  );
+  return texts;
+}

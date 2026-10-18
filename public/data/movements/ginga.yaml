@@ -1,0 +1,43 @@
+id: ginga
+name: Ginga
+translation: balanço, gingado
+category: fundamento
+side: right
+summary: >-
+  O balanço constante de onde todo movimento sai e para onde todo movimento
+  volta. Os pés desenham um triângulo — paralela, um pé atrás, paralela, o
+  outro pé atrás — enquanto os braços se revezam na guarda do rosto.
+steps:
+  - Fique com os pés um pouco mais abertos que os ombros, joelhos flexionados e o peso baixo.
+  - Leve o pé direito na diagonal para trás, apoiado na ponta; o joelho esquerdo fica sobre o pé esquerdo.
+  - Traga o antebraço direito na frente do rosto; abra o braço esquerdo atrás do corpo.
+  - Volte o pé direito para a linha da paralela, depois leve o pé esquerdo para trás e troque os braços.
+  - Mantenha o tronco levemente inclinado à frente e os olhos no camarada o tempo todo.
+tips:
+  - Nunca fique parado — a ginga faz de você um alvo em movimento e esconde qual golpe vem a seguir.
+  - O braço do lado da perna de trás é o que protege o rosto.
+  - O ritmo vem do berimbau; toques lentos pedem uma ginga baixa e larga.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+loop: true
+duration: 2.4
+# The floor triangle the feet step on, [x, z] in metres (left = +x, front = +z):
+# front left, front right, back. Drawn on the floor and used by ml/ for training.
+triangle: [[0.34, 0.14], [-0.34, 0.14], [0, -0.5]]
+keyframes:
+  - t: 0
+    pose: parallel
+    label: paralela
+  - t: 0.6
+    pose: ginga_r
+    root: { yaw: 20, z: 0.06 }
+    label: base — pé direito atrás
+  - t: 1.2
+    pose: parallel
+    root: { yaw: 0, z: 0 }
+    label: paralela
+  - t: 1.8
+    pose: ginga_l
+    root: { yaw: -20, z: 0.06 }
+    label: base — pé esquerdo atrás

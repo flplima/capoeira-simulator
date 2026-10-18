@@ -1,0 +1,5 @@
+# capoeira environment. `.envrc` (untracked) provides these; vite.config.ts
+# falls back to the same port when the shell hasn't loaded it.
+
+# Dev/preview server port.
+export PORT=3895

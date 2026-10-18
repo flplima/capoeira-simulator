@@ -1,0 +1,72 @@
+id: martelo
+name: Martelo
+aka: [martelo em pé]
+translation: martelo (a ferramenta)
+category: ataque direto
+side: right
+summary: >-
+  Um chute circular: o joelho de trás sobe pelo lado, o pé de apoio gira e a
+  perna estala para acertar a cabeça ou as costelas com o peito do pé ou a
+  canela, depois dobra de volta antes de retornar à base.
+steps:
+  - Da base com o pé direito atrás, suba o joelho direito para cima e para o lado.
+  - Gire na ponta do pé esquerdo para que o quadril vire em direção ao alvo.
+  - Incline o tronco para o lado oposto e estale a perna, batendo com o peito do pé (ponta esticada).
+  - Dobre o joelho de volta na hora e devolva o pé à base.
+tips:
+  - É o giro do pé de apoio que deixa o quadril virar; não chute com o quadril de frente.
+  - Mantenha o braço da guarda na frente do rosto enquanto o tronco se inclina.
+  - A perna vai e volta pelo mesmo caminho — uma martelada rápida.
+sources:
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+  - title: The 8 Training Sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+loop: false
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.35
+    label: joelho sobe pelo lado, gira na ponta do pé de apoio
+    root: { yaw: 40, pitch: 0, roll: 10 }
+    torso: { flex: 10, side: 8, twist: -15 }
+    head: { flex: -8, twist: -25 }
+    hip_l: { flex: 12, abd: -10, rot: 0 }
+    knee_l: 18
+    ankle_l: 25
+    hip_r: { flex: 75, abd: 50, rot: 0 }
+    knee_r: 115
+    ankle_r: 30
+    shoulder_l: { flex: 95, abd: 12, rot: 55 }
+    elbow_l: 115
+    shoulder_r: { flex: 25, abd: 25, rot: 20 }
+    elbow_r: 80
+  - t: 0.6
+    label: estala — o peito do pé acerta
+    root: { yaw: 90, pitch: -4, roll: 34 }
+    torso: { flex: 6, side: 22, twist: -25 }
+    head: { flex: -2, side: -24, twist: -45 }
+    hip_l: { flex: 10, abd: -12 }
+    knee_l: 12
+    ankle_l: 30
+    hip_r: { flex: 72, abd: 90 }
+    knee_r: 5
+    ankle_r: 45
+  - t: 0.7
+    label: segura
+  - t: 0.95
+    label: dobra o joelho de volta
+    root: { yaw: 40, pitch: 0, roll: 10 }
+    torso: { flex: 10, side: 8, twist: -15 }
+    head: { flex: -8, side: 0, twist: -25 }
+    hip_l: { flex: 12, abd: -10 }
+    knee_l: 18
+    ankle_l: 25
+    hip_r: { flex: 75, abd: 50 }
+    knee_r: 115
+    ankle_r: 30
+  - t: 1.4
+    pose: base_r
+    label: volta à base
+    root: { yaw: 0 }

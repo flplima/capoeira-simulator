@@ -1,0 +1,78 @@
+id: joelhada
+name: Joelhada
+translation: golpe de joelho
+category: ataque de proximidade
+side: right
+summary: >-
+  Golpe de joelho para o jogo de perto: o joelho da perna de trás sobe para a
+  frente, no corpo ou no rosto do camarada que entra baixo — depois de uma
+  cabeçada, de uma esquiva baixa ou de uma entrada descuidada — enquanto os
+  braços protegem a cabeça.
+steps:
+  - Na base da ginga, com o pé direito atrás, encurte a distância com um passinho à frente.
+  - Leve o joelho direito para cima e para a frente, pé esticado, o quadril empurrando por trás do joelho.
+  - Suba os dois antebraços na frente do rosto — na quinta sequência de Bimba os braços cruzam por cima da cabeça do camarada.
+  - No impacto, suba um pouco no pé de apoio.
+  - Desça a perna e volte com um passo para a base.
+tips:
+  - Use só de perto; de longe ela deixa você aberto, apoiado numa perna só.
+  - A força vem do quadril indo para a frente, não de levantar a perna.
+  - Mantenha o joelho de apoio solto, para absorver um empurrão.
+sources:
+  - title: The 8 training sequences of Mestre Bimba — Papoeira
+    url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+  - title: List of capoeira techniques — Wikipedia
+    url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
+loop: false
+keyframes:
+  - t: 0
+    pose: base_r
+    label: base — pé direito atrás
+  - t: 0.35
+    pose: base_r
+    label: entra, mãos para cima
+    root: { z: 0.1 }
+    torso: { flex: 10 }
+    head: { flex: -8 }
+    hip_l: { flex: 30, abd: 8, rot: 5 }
+    knee_l: 40
+    ankle_l: -10
+    hip_r: { flex: 20, abd: 8, rot: 8 }
+    knee_r: 55
+    ankle_r: 20
+    shoulder_r: { flex: 100, abd: 20, rot: 35 }
+    elbow_r: 95
+    shoulder_l: { flex: 100, abd: 20, rot: 35 }
+    elbow_l: 95
+  - t: 0.6
+    label: joelho sobe
+    root: { z: 0.16 }
+    torso: { flex: -6 }
+    head: { flex: 4 }
+    hip_l: { flex: 6, abd: 6 }
+    knee_l: 10
+    ankle_l: 15
+    hip_r: { flex: 120, abd: 4, rot: 0 }
+    knee_r: 130
+    ankle_r: 35
+    shoulder_r: { flex: 85, abd: 0, rot: 20 }
+    elbow_r: 50
+    shoulder_l: { flex: 85, abd: 0, rot: 20 }
+    elbow_l: 50
+  - t: 0.75
+    label: joelho sobe
+  - t: 1.0
+    label: desce a perna
+    root: { z: 0.1 }
+    torso: { flex: 10 }
+    head: { flex: -8 }
+    hip_l: { flex: 30, abd: 8 }
+    knee_l: 40
+    ankle_l: -10
+    hip_r: { flex: 30, abd: 8 }
+    knee_r: 60
+    ankle_r: 20
+  - t: 1.45
+    pose: base_r
+    label: base — pé direito atrás
+    root: { z: 0 }

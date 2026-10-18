@@ -1,0 +1,148 @@
+<mujoco model="capoeirista">
+  <compiler angle="degree" autolimits="true"/>
+  <option timestep="0.002" gravity="0 -9.81 0" integrator="implicitfast"/>
+  <default>
+    <joint damping="2" armature="0.02" limited="true"/>
+    <geom contype="6" conaffinity="5" condim="3" friction="0.9 0.02 0.002" solref="0.015 1"/>
+  </default>
+  <worldbody>
+    <light pos="0 4 3" dir="0 -1 -0.6"/>
+    <camera name="front" pos="0 1.0 4.2" xyaxes="1 0 0 0 1 0" mode="trackcom"/>
+    <camera name="side" pos="4.2 1.0 0" xyaxes="0 0 -1 0 1 0" mode="trackcom"/>
+    <geom name="floor" type="plane" size="20 20 0.1" quat="0.7071068 -0.7071068 0 0" contype="1" conaffinity="2" friction="1.0 0.02 0.002"/>
+    <body name="hips" pos="0 0.97 0">
+      <freejoint name="root"/>
+      <geom name="hips" type="ellipsoid" size="0.16 0.11 0.115" pos="0 -0.01 0" mass="7.819"/>
+      <site name="hip_joint_l" pos="0.095 -0.06 0" size="0.01"/>
+      <site name="hip_joint_r" pos="-0.095 -0.06 0" size="0.01"/>
+      <body name="spine" pos="0 0.1 0">
+        <joint name="spine_twist" axis="0 1 0" range="-40.0 40.0"/>
+        <joint name="spine_flex" axis="1 0 0" range="-30.0 55.0"/>
+        <joint name="spine_side" axis="0 0 -1" range="-30.0 30.0"/>
+        <geom name="spine" type="capsule" fromto="0 0.02 0 0 0.14 0" size="0.11" mass="11.431"/>
+        <body name="chest" pos="0 0.17 0">
+          <joint name="chest_twist" axis="0 1 0" range="-40.0 40.0"/>
+          <joint name="chest_flex" axis="1 0 0" range="-30.0 55.0"/>
+          <joint name="chest_side" axis="0 0 -1" range="-30.0 30.0"/>
+          <geom name="chest" type="capsule" fromto="-0.06 0.12 0 0.06 0.12 0" size="0.12" mass="11.172"/>
+          <site name="shoulder_l" pos="0.18 0.19 0" size="0.01"/>
+          <site name="shoulder_r" pos="-0.18 0.19 0" size="0.01"/>
+          <body name="neck" pos="0 0.23 0">
+            <joint name="neck_twist" axis="0 1 0" range="-80.0 80.0"/>
+            <joint name="neck_flex" axis="1 0 0" range="-70.0 80.0"/>
+            <joint name="neck_side" axis="0 0 -1" range="-45.0 45.0"/>
+            <geom name="neck" type="capsule" fromto="0 -0.02 0 0 0.08 0" size="0.045" mass="0.5"/>
+            <body name="head" pos="0 0.09 0">
+              <geom name="head" type="sphere" size="0.105" pos="0 0.1 0" mass="4.358"/>
+              <site name="nose" pos="0 0.09 0.1" size="0.01"/>
+              <site name="ear_l" pos="0.09 0.1 0" size="0.01"/>
+              <site name="ear_r" pos="-0.09 0.1 0" size="0.01"/>
+            </body>
+          </body>
+          <body name="upperarm_l" pos="0.18 0.19 0">
+            <joint name="shoulder_l_flex" axis="-1 0 0" range="-90 190"/>
+            <joint name="shoulder_l_abd" axis="0 0 1" range="-45 190"/>
+            <joint name="shoulder_l_rot" axis="0 -1 0" range="-100 100"/>
+            <geom name="upperarm_l" type="capsule" fromto="0 -0.03 0 0 -0.26 0" size="0.046" mass="1.897"/>
+            <body name="forearm_l" pos="0 -0.29 0">
+              <joint name="elbow_l" axis="-1 0 0" range="0 160"/>
+              <geom name="forearm_l" type="capsule" fromto="0 -0.03 0 0 -0.22 0" size="0.038" mass="1.134"/>
+              <site name="elbow_l" pos="0 0 0" size="0.01"/>
+              <body name="hand_l" pos="0 -0.25 0">
+                <geom name="hand_l" type="capsule" fromto="0 -0.03 0 0 -0.12 0" size="0.032" mass="0.427"/>
+                <site name="wrist_l" pos="0 0 0" size="0.01"/>
+                <site name="fingers_l" pos="0 -0.15 0" size="0.01"/>
+              </body>
+            </body>
+          </body>
+          <body name="upperarm_r" pos="-0.18 0.19 0">
+            <joint name="shoulder_r_flex" axis="-1 0 0" range="-90 190"/>
+            <joint name="shoulder_r_abd" axis="0 0 -1" range="-45 190"/>
+            <joint name="shoulder_r_rot" axis="0 1 0" range="-100 100"/>
+            <geom name="upperarm_r" type="capsule" fromto="0 -0.03 0 0 -0.26 0" size="0.046" mass="1.897"/>
+            <body name="forearm_r" pos="0 -0.29 0">
+              <joint name="elbow_r" axis="-1 0 0" range="0 160"/>
+              <geom name="forearm_r" type="capsule" fromto="0 -0.03 0 0 -0.22 0" size="0.038" mass="1.134"/>
+              <site name="elbow_r" pos="0 0 0" size="0.01"/>
+              <body name="hand_r" pos="0 -0.25 0">
+                <geom name="hand_r" type="capsule" fromto="0 -0.03 0 0 -0.12 0" size="0.032" mass="0.427"/>
+                <site name="wrist_r" pos="0 0 0" size="0.01"/>
+                <site name="fingers_r" pos="0 -0.15 0" size="0.01"/>
+              </body>
+            </body>
+          </body>
+        </body>
+      </body>
+      <body name="thigh_l" pos="0.095 -0.06 0">
+        <joint name="hip_l_flex" axis="-1 0 0" range="-60 140"/>
+        <joint name="hip_l_abd" axis="0 0 1" range="-40 90"/>
+        <joint name="hip_l_rot" axis="0 -1 0" range="-60 60"/>
+        <geom name="thigh_l" type="capsule" fromto="0 -0.05 0 0 -0.38 0" size="0.072" mass="9.912"/>
+        <body name="shin_l" pos="0 -0.43 0">
+          <joint name="knee_l" axis="1 0 0" range="0 160"/>
+          <geom name="shin_l" type="capsule" fromto="0 -0.03 0 0 -0.36 0" size="0.054" mass="3.031"/>
+          <site name="knee_l" pos="0 0 0" size="0.01"/>
+          <body name="foot_l" pos="0 -0.41 0">
+            <joint name="ankle_l" axis="1 0 0" range="-45 60"/>
+            <joint name="ankle_l_inv" axis="0 0 1" range="-25 25"/>
+            <geom name="foot_l" type="box" size="0.045 0.03 0.115" pos="0 -0.045 0.055" mass="0.959" friction="1.2 0.02 0.002"/>
+            <site name="ankle_l" pos="0 0 0" size="0.01"/>
+            <site name="heel_l" pos="0 -0.075 -0.06" size="0.01"/>
+            <site name="toe_l" pos="0 -0.075 0.17" size="0.01"/>
+          </body>
+        </body>
+      </body>
+      <body name="thigh_r" pos="-0.095 -0.06 0">
+        <joint name="hip_r_flex" axis="-1 0 0" range="-60 140"/>
+        <joint name="hip_r_abd" axis="0 0 -1" range="-40 90"/>
+        <joint name="hip_r_rot" axis="0 1 0" range="-60 60"/>
+        <geom name="thigh_r" type="capsule" fromto="0 -0.05 0 0 -0.38 0" size="0.072" mass="9.912"/>
+        <body name="shin_r" pos="0 -0.43 0">
+          <joint name="knee_r" axis="1 0 0" range="0 160"/>
+          <geom name="shin_r" type="capsule" fromto="0 -0.03 0 0 -0.36 0" size="0.054" mass="3.031"/>
+          <site name="knee_r" pos="0 0 0" size="0.01"/>
+          <body name="foot_r" pos="0 -0.41 0">
+            <joint name="ankle_r" axis="1 0 0" range="-45 60"/>
+            <joint name="ankle_r_inv" axis="0 0 -1" range="-25 25"/>
+            <geom name="foot_r" type="box" size="0.045 0.03 0.115" pos="0 -0.045 0.055" mass="0.959" friction="1.2 0.02 0.002"/>
+            <site name="ankle_r" pos="0 0 0" size="0.01"/>
+            <site name="heel_r" pos="0 -0.075 -0.06" size="0.01"/>
+            <site name="toe_r" pos="0 -0.075 0.17" size="0.01"/>
+          </body>
+        </body>
+      </body>
+    </body>
+  </worldbody>
+  <actuator>
+    <position name="spine_twist" joint="spine_twist" kp="600" dampratio="1" forcerange="-300 300" ctrlrange="-0.6981 0.6981"/>
+    <position name="spine_flex" joint="spine_flex" kp="600" dampratio="1" forcerange="-300 300" ctrlrange="-0.5236 0.9599"/>
+    <position name="spine_side" joint="spine_side" kp="600" dampratio="1" forcerange="-300 300" ctrlrange="-0.5236 0.5236"/>
+    <position name="chest_twist" joint="chest_twist" kp="500" dampratio="1" forcerange="-250 250" ctrlrange="-0.6981 0.6981"/>
+    <position name="chest_flex" joint="chest_flex" kp="500" dampratio="1" forcerange="-250 250" ctrlrange="-0.5236 0.9599"/>
+    <position name="chest_side" joint="chest_side" kp="500" dampratio="1" forcerange="-250 250" ctrlrange="-0.5236 0.5236"/>
+    <position name="neck_twist" joint="neck_twist" kp="60" dampratio="1" forcerange="-40 40" ctrlrange="-1.3963 1.3963"/>
+    <position name="neck_flex" joint="neck_flex" kp="60" dampratio="1" forcerange="-40 40" ctrlrange="-1.2217 1.3963"/>
+    <position name="neck_side" joint="neck_side" kp="60" dampratio="1" forcerange="-40 40" ctrlrange="-0.7854 0.7854"/>
+    <position name="shoulder_l_flex" joint="shoulder_l_flex" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-1.5708 3.3161"/>
+    <position name="shoulder_l_abd" joint="shoulder_l_abd" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-0.7854 3.3161"/>
+    <position name="shoulder_l_rot" joint="shoulder_l_rot" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-1.7453 1.7453"/>
+    <position name="elbow_l" joint="elbow_l" kp="80" dampratio="1" forcerange="-60 60" ctrlrange="0.0000 2.7925"/>
+    <position name="shoulder_r_flex" joint="shoulder_r_flex" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-1.5708 3.3161"/>
+    <position name="shoulder_r_abd" joint="shoulder_r_abd" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-0.7854 3.3161"/>
+    <position name="shoulder_r_rot" joint="shoulder_r_rot" kp="120" dampratio="1" forcerange="-80 80" ctrlrange="-1.7453 1.7453"/>
+    <position name="elbow_r" joint="elbow_r" kp="80" dampratio="1" forcerange="-60 60" ctrlrange="0.0000 2.7925"/>
+    <position name="hip_l_flex" joint="hip_l_flex" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-1.0472 2.4435"/>
+    <position name="hip_l_abd" joint="hip_l_abd" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-0.6981 1.5708"/>
+    <position name="hip_l_rot" joint="hip_l_rot" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-1.0472 1.0472"/>
+    <position name="knee_l" joint="knee_l" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="0.0000 2.7925"/>
+    <position name="ankle_l" joint="ankle_l" kp="400" dampratio="1" forcerange="-200 200" ctrlrange="-0.7854 1.0472"/>
+    <position name="ankle_l_inv" joint="ankle_l_inv" kp="200" dampratio="1" forcerange="-100 100" ctrlrange="-0.4363 0.4363"/>
+    <position name="hip_r_flex" joint="hip_r_flex" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-1.0472 2.4435"/>
+    <position name="hip_r_abd" joint="hip_r_abd" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-0.6981 1.5708"/>
+    <position name="hip_r_rot" joint="hip_r_rot" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="-1.0472 1.0472"/>
+    <position name="knee_r" joint="knee_r" kp="700" dampratio="1" forcerange="-400 400" ctrlrange="0.0000 2.7925"/>
+    <position name="ankle_r" joint="ankle_r" kp="400" dampratio="1" forcerange="-200 200" ctrlrange="-0.7854 1.0472"/>
+    <position name="ankle_r_inv" joint="ankle_r_inv" kp="200" dampratio="1" forcerange="-100 100" ctrlrange="-0.4363 0.4363"/>
+  </actuator>
+</mujoco>
+
