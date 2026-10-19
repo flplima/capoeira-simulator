@@ -13,7 +13,7 @@ import {
   RingGeometry,
 } from "three";
 import type { Markers } from "../physics/markers";
-import type { Placement } from "../sim/simulation";
+import type { Placement } from "../sim/types";
 
 const LIFT = 0.002;
 const REACH = 0.14; // a planted foot this close to a corner is on it

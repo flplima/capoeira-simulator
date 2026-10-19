@@ -18,7 +18,7 @@ each network reads only as many as it was trained on.
 import numpy as np
 import torch
 
-from env import DODGES
+from env_consts import DODGES
 from train import Agent, RunningNorm
 
 HANDBACK = 1.0  # s of ginga after getting up that the recovery network still drives

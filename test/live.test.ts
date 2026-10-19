@@ -1,7 +1,8 @@
 import { readFile } from "node:fs/promises";
 import { describe, expect, it } from "vitest";
 import load from "@mujoco/mujoco";
-import { LiveGinga, type LiveFiles, type Move } from "../src/sim/simulation";
+import { LiveGinga } from "../src/sim/simulation";
+import type { LiveFiles, Move } from "../src/sim/types";
 
 // The browser runs the policy itself, so its port of the observation and of
 // the network has to match ml/ exactly. The fixture (written by

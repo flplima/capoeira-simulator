@@ -23,7 +23,8 @@ import numpy as np
 import torch
 from torch import nn
 
-from env import ENDS, LANDINGS, GingaEnv
+from env import GingaEnv
+from env_consts import ENDS, LANDINGS
 
 
 class RunningNorm:

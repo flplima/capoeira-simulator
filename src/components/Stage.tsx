@@ -5,7 +5,7 @@ import { Vector3, type PerspectiveCamera } from "three";
 import type { OrbitControls as OrbitControlsImpl } from "three/examples/jsm/controls/OrbitControls.js";
 import { CapoeiraContext } from "../context";
 import type { Playback } from "../playback";
-import { loadLive } from "../sim/simulation";
+import { loadLive } from "../sim/loader";
 import { berimbau } from "../music/berimbau";
 import { buildRig, type Rig } from "../rig/rig";
 import { Markers } from "../physics/markers";

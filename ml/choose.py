@@ -19,7 +19,8 @@ import mujoco
 import numpy as np
 
 from brain import Brain
-from env import DODGES, ENTRY_CENTRE, ENTRY_WINDOW, FRAME_SKIP, KICK_MOVES, GingaEnv
+from env import GingaEnv
+from env_consts import DODGES, ENTRY_CENTRE, ENTRY_WINDOW, FRAME_SKIP, KICK_MOVES
 
 TEMPOS = [60.0, 78.0, 96.0, 114.0, 130.0]
 BINS = 16  # request moments per ginga cycle

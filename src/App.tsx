@@ -9,7 +9,7 @@ import { Timeline } from "./components/Timeline";
 import { Info } from "./components/Info";
 import { berimbau } from "./music/berimbau";
 import { useBerimbau } from "./music/useBerimbau";
-import type { Move } from "./sim/simulation";
+import type { Move } from "./sim/types";
 
 const KEYS: Record<string, EventFromLogic<typeof capoeiraMachine>> = {
   " ": { type: "TOGGLE_PLAY" },

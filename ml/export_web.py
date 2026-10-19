@@ -33,7 +33,8 @@ import numpy as np
 import torch
 
 from brain import HANDBACK, MOVE_HANDBACK, Brain
-from env import (
+from env import GingaEnv
+from env_consts import (
     ACTION_SCALE,
     ALLOWED_CONTACT,
     BENT,
@@ -58,7 +59,6 @@ from env import (
     TROUBLE_TILT,
     WAIT_FROM,
     WAIT_SPAN,
-    GingaEnv,
 )
 
 

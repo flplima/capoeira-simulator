@@ -9,7 +9,7 @@ import {
   type GingaStyle,
   type Maneuver,
   type Move,
-} from "../sim/simulation";
+} from "../sim/types";
 import { SPEEDS, type Topic } from "../machine";
 import { berimbau } from "../music/berimbau";
 import { MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";

@@ -21,7 +21,9 @@ import mujoco
 import numpy as np
 
 from brain import Brain
-from env import DIVE, DIVE_UNTIL, DODGES, ENTRY_CENTRE, FALL_TIME, FRAME_SKIP, KICK_MOVES, LOST, MIN_PACE, STUCK, GingaEnv, place_xz
+from env import GingaEnv
+from env_consts import DIVE, DIVE_UNTIL, DODGES, ENTRY_CENTRE, FALL_TIME, FRAME_SKIP, KICK_MOVES, LOST, MIN_PACE, STUCK
+from env_math import place_xz
 
 TOQUES = [("Angola", 66.0), ("São Bento Pequeno", 90.0), ("São Bento Grande", 120.0)]
 

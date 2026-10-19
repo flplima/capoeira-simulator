@@ -23,7 +23,7 @@ import numpy as np
 from scipy.ndimage import gaussian_filter1d
 from scipy.optimize import least_squares
 
-from env import nlerp
+from env_math import nlerp
 from reference import NAMES, TRIANGLE, arm_clearance, d, fix_arms, m, root_quat
 
 KICKS = ["martelo", "bencao", "meia-lua-de-frente", "queixada", "ponteira", "joelhada", "meia-lua-de-compasso"]

@@ -21,7 +21,7 @@ joelhos. Depois tenta levantar pelo caminho dessas mesmas posições, voltar par
 a base e seguir gingando onde levantou (o triângulo vai junto). Por enquanto a
 rede de recuperação ainda quase nunca consegue: o corpo bate a cabeça ou se
 perde no chão, e é posto de pé de novo depois de 1,2 s (ver
-[`ml/`](ml/README.md#resultado-do-treino)).
+[`ml/`](ml/README-TRAINING.md#resultado-do-treino)).
 
 O painel ao lado explica cada movimento treinado (ginga, martelo, bênção,
 esquiva lateral) — como fazer, dicas e fontes; pedir um movimento abre a aba
