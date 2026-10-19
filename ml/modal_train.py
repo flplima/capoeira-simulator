@@ -1,11 +1,24 @@
 """Run MJX Capoeira training on Modal's serverless GPU tier ($30/mo free credit).
 
+This is the default way to train; `train_mjx.py` runs the same loop on this
+machine (CPU or whatever device JAX finds) and writes the same checkpoints.
+
 First-time setup:
     uv run modal setup
 
-Launch a training run on an NVIDIA L4 GPU (default) and save checkpoints to both
-Modal Volume `capoeira-mjx-runs` and local `runs/<out>/`:
-    uv run modal run modal_train.py --skill kicks --steps 40000000 --minutes 30 --out runs/mjx_kicks --init runs/expert_kicks11/last.pt
+Start a run on an NVIDIA L4 GPU. `--detach` keeps it going after this shell
+returns, and `--no-wait` makes the entrypoint start it and exit; the run keeps
+committing `best.pt`, `last.pt` and `log.jsonl` to Modal Volume
+`capoeira-mjx-runs` every 3 minutes:
+    uv run modal run --detach modal_train.py --no-wait --skill kicks --minutes 30 --out runs/mjx_kicks --init runs/expert_kicks11/last.pt
+
+Without `--no-wait` the entrypoint blocks and saves the checkpoints to `runs/<out>/` itself.
+
+Watch a run and bring its checkpoints home:
+    uv run modal run modal_train.py::tail --run mjx_kicks
+    uv run modal run modal_train.py::fetch --run mjx_kicks
+
+Stop one: `uv run modal app list`, then `uv run modal app stop <app-id>`.
 """
 
 from __future__ import annotations
@@ -31,8 +44,18 @@ image = (
         "torch>=2.4",
     )
     .add_local_file(HERE / "humanoid.xml", "/workspace/humanoid.xml")
-    .add_local_file(HERE / "env.py", "/workspace/env.py")
+    .add_local_file(HERE / "env_consts.py", "/workspace/env_consts.py")
+    .add_local_file(HERE / "env_math.py", "/workspace/env_math.py")
+    .add_local_file(HERE / "env_clips.py", "/workspace/env_clips.py")
+    .add_local_file(HERE / "mjx_math.py", "/workspace/mjx_math.py")
+    .add_local_file(HERE / "mjx_model.py", "/workspace/mjx_model.py")
+    .add_local_file(HERE / "mjx_tables.py", "/workspace/mjx_tables.py")
+    .add_local_file(HERE / "mjx_state.py", "/workspace/mjx_state.py")
+    .add_local_file(HERE / "mjx_target.py", "/workspace/mjx_target.py")
+    .add_local_file(HERE / "mjx_reset.py", "/workspace/mjx_reset.py")
+    .add_local_file(HERE / "mjx_step.py", "/workspace/mjx_step.py")
     .add_local_file(HERE / "env_mjx.py", "/workspace/env_mjx.py")
+    .add_local_file(HERE / "train_nets.py", "/workspace/train_nets.py")
     .add_local_file(HERE / "train_mjx.py", "/workspace/train_mjx.py")
     .add_local_dir(HERE / "data", "/workspace/data")
 )
@@ -139,6 +162,7 @@ def main(
     minibatches: int = 4,
     start_size: int = -1,
     patience: int = 100,
+    wait: bool = True,
 ) -> None:
     init_bytes = None
     if init:
@@ -150,7 +174,7 @@ def main(
     local_out = Path(out)
     run_name = local_out.name
 
-    artifacts = remote_train.remote(
+    train_args = dict(
         run_name=run_name,
         steps=steps,
         envs=envs,
@@ -165,6 +189,11 @@ def main(
         patience=patience,
         init_bytes=init_bytes,
     )
+    if not wait:
+        call = remote_train.spawn(**train_args)
+        print(f"Started {run_name} on Modal (call {call.object_id}); `modal_train.py::fetch --run {run_name}` brings it home.")
+        return
+    artifacts = remote_train.remote(**train_args)
 
     if not local_out.is_absolute():
         local_out = HERE / local_out
@@ -172,3 +201,37 @@ def main(
     for name, data in artifacts.items():
         (local_out / name).write_bytes(data)
     print(f"Saved {', '.join(artifacts.keys())} to {local_out}")
+
+
+RUN_FILES = ("best.pt", "last.pt", "log.jsonl")
+
+
+def _read_volume_file(path: str) -> bytes:
+    return b"".join(vol.read_file(path))
+
+
+@app.local_entrypoint()
+def fetch(run: str, out: str = "") -> None:
+    """Copy a run's checkpoints and log from the volume into runs/<run>/."""
+    local_out = Path(out) if out else HERE / "runs" / run
+    local_out.mkdir(parents=True, exist_ok=True)
+    saved = []
+    for name in RUN_FILES:
+        try:
+            (local_out / name).write_bytes(_read_volume_file(f"{run}/{name}"))
+        except FileNotFoundError:
+            continue
+        saved.append(name)
+    if not saved:
+        raise SystemExit(f"Nothing for run {run!r} in volume capoeira-mjx-runs")
+    print(f"Saved {', '.join(saved)} to {local_out}")
+
+
+@app.local_entrypoint()
+def tail(run: str, lines: int = 5) -> None:
+    """Print the last lines of a run's log.jsonl straight from the volume."""
+    try:
+        log = _read_volume_file(f"{run}/log.jsonl").decode()
+    except FileNotFoundError:
+        raise SystemExit(f"No log.jsonl for run {run!r} in volume capoeira-mjx-runs")
+    print("\n".join(log.strip().splitlines()[-lines:]))

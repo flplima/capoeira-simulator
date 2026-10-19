@@ -12,7 +12,7 @@ The `capoeira-render` skill tells you how to record, render and what to look for
 
 ## Your job
 
-1. **Offline review** (`capoeira/ml`): record a short run of the checkpoints you
+1. **Offline review** (`ml/`): record a short run of the checkpoints you
    are given (`check.py --record`) or use the recording you are handed, render
    the moments that matter with `viz.py`, and look at every image. For the
    ginga, also render `data/ginga_fit.npz` (the master in the video) at the
@@ -24,13 +24,13 @@ The `capoeira-render` skill tells you how to record, render and what to look for
    would actually fall into from each.
 3. **Browser review**, when asked or before shipping: load the `agent-browser`
    skill and follow it.
-   - Session: the one in `capoeira/.envrc` (`AGENT_BROWSER_SESSION`). Never close it.
+   - Session: the one in `.envrc` (`AGENT_BROWSER_SESSION`). Never close it.
    - Always launch it muted: pass `--args "--mute-audio"` on the first command
      (the `.envrc` also sets `AGENT_BROWSER_ARGS`). The user shouldn't hear
      the berimbau; check the music from the status line and the button, not
      by ear.
    - The dev server is on port 3895 (`lsof -iTCP:3895 -sTCP:LISTEN`); if it is not
-     running, start `npm run dev` in the background from `capoeira/`.
+     running, start `npm run dev` in the background from the repo root.
    - Turn on **Física real (ML)**, play the ginga at each toque, ask for martelo
      and bênção, press **Empurrão** (key E) several times, and watch the body
      fall and get up. Screenshots go to your scratchpad. Check the pt-BR labels
