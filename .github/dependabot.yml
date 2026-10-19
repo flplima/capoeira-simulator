@@ -1,0 +1,44 @@
+# Dependabot: security updates for everything that ships, grouped so a scan
+# never turns into a dozen PRs. Version (non-security) bumps stay manual,
+# which is what `open-pull-requests-limit: 0` does: it turns version updates
+# off while the entry's grouping still shapes the security PRs.
+version: 2
+updates:
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 0
+    groups:
+      npm-security:
+        applies-to: security-updates
+        patterns: ["*"]
+    commit-message:
+      prefix: "🔧"
+
+  # The Python training pipeline (uv.lock).
+  - package-ecosystem: uv
+    directory: /ml
+    schedule:
+      interval: weekly
+      day: monday
+    open-pull-requests-limit: 0
+    groups:
+      python-security:
+        applies-to: security-updates
+        patterns: ["*"]
+    commit-message:
+      prefix: "🔧"
+
+  # The workflows' own actions.
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+    groups:
+      actions:
+        patterns: ["*"]
+    commit-message:
+      prefix: "🔧"

@@ -5,7 +5,7 @@ description: Render the capoeira physics body, its reference motions and recorde
 
 # Rendering the body to judge the movement
 
-Run from `capoeira/ml`. `$SCRATCH` below is your session scratchpad directory (or
+Run from `ml/`. `$SCRATCH` below is your session scratchpad directory (or
 `mktemp -d`); recordings and images go there, never into the repo. Read each PNG
 with the Read tool — look at every image you make.
 

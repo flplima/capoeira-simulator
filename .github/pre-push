@@ -1,0 +1,20 @@
+#!/bin/sh
+set -e
+
+# The gates that fail in CI but not in pre-commit: the type-check and the full
+# suite. Push runs once per push rather than once per commit.
+#
+# CAPOEIRA_SKIP_PREPUSH=1 git push  — escape hatch for a genuine emergency.
+
+if [ -n "$CAPOEIRA_SKIP_PREPUSH" ]; then
+  echo "pre-push: skipped (CAPOEIRA_SKIP_PREPUSH set)."
+  exit 0
+fi
+
+echo "Type checking (tsc -b)..."
+npx tsc -b
+
+echo "Unit tests (vitest)..."
+npx vitest run
+
+echo "pre-push: OK"

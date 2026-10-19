@@ -2,3 +2,5 @@ node_modules/
 dist/
 .envrc
 .envrc.local
+*.tsbuildinfo
+.DS_Store

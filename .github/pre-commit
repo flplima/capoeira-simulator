@@ -1,0 +1,28 @@
+#!/bin/sh
+set -e
+
+# Fast on purpose: the repo policy and the unit tests related to what is staged.
+# Type-checking and the full suite run at push and in CI.
+
+echo "Checking repo policy (including the 5,000-token file cap)..."
+npm run check:policy
+
+# `vitest related` runs a staged test file directly and any tests that
+# transitively import a staged source file.
+CHANGED_TS=$(git diff --cached --name-only --diff-filter=ACM \
+  | grep -E '^(src|test)/.*\.(ts|tsx)$' || true)
+if [ -n "$CHANGED_TS" ]; then
+  echo "Running unit tests related to staged changes..."
+  # shellcheck disable=SC2086
+  npx vitest related --run $CHANGED_TS
+else
+  echo "No staged src/test changes — skipping unit tests."
+fi
+
+CHANGED_PY=$(git diff --cached --name-only --diff-filter=ACM | grep -E '^ml/.*\.py$' || true)
+if [ -n "$CHANGED_PY" ]; then
+  echo "Compiling staged Python..."
+  # shellcheck disable=SC2086
+  python3 -m py_compile $CHANGED_PY
+  find ml -name __pycache__ -not -path 'ml/.venv/*' -prune -exec rm -rf {} +
+fi

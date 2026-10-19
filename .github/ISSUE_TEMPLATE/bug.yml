@@ -1,0 +1,57 @@
+name: Bug Report
+description: File a bug report for the capoeira simulator
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for reporting an issue! Please check existing issues before filing.
+  - type: textarea
+    id: description
+    attributes:
+      label: Description
+      description: What is wrong. For a movement, say which one (ginga, martelo, bênção, esquiva, fall, get-up) and the tempo.
+    validations:
+      required: true
+  - type: textarea
+    id: reproduction
+    attributes:
+      label: Steps to Reproduce
+      placeholder: |
+        1. Open the app and switch on "Física real (ML)"
+        2. Press `1` at 96 bpm
+        3. See the body fall
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected Behavior
+    validations:
+      required: true
+  - type: dropdown
+    id: browser
+    attributes:
+      label: Browser
+      options:
+        - Chrome
+        - Safari
+        - Firefox
+        - Other
+    validations:
+      required: true
+  - type: input
+    id: commit
+    attributes:
+      label: Commit
+      description: Output of `git rev-parse --short HEAD`
+    validations:
+      required: false
+  - type: textarea
+    id: additional-context
+    attributes:
+      label: Additional Context
+      description: Screenshots, recordings, console output.
+    validations:
+      required: false

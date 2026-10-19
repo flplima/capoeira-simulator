@@ -1,11 +1,11 @@
 ---
 name: capoeira-eval
-description: Train, test and export the capoeira physics policies (ginga, kicks, fall-and-get-up) — the train.py / check.py / choose.py / export_web.py commands, how to read their output, the trial-run gate, when to stop a run, and the pass bars. Use when starting, watching or judging a training run or shipping networks to the app.
+description: Train, test and export the capoeira physics policies (ginga, kicks, fall-and-get-up) — the modal_train.py / train_mjx.py / train.py / check.py / choose.py / export_web.py commands, how to read their output, the trial-run gate, when to stop a run, and the pass bars. Use when starting, watching or judging a training run or shipping networks to the app.
 ---
 
 # Training and testing the capoeira policies
 
-Everything runs from `capoeira/ml` with `uv run python …`. `ml/README.md` explains
+Everything runs from `ml/` with `uv run python …`. `ml/README.md` explains
 the pipeline; this file is the operating manual.
 
 ## The networks
@@ -21,41 +21,72 @@ Current best: ginga `runs/expert_ginga6/last.pt`, kicks `runs/expert_kicks9/best
 recover — none yet (`runs/expert_recover` got up 0 times; it is the baseline to beat), esquiva `runs/expert_esquiva6/last.pt`.
 New runs get the next free number; never overwrite or delete a run folder.
 
-## Is something already training?
+## Where training runs
 
-The Mac runs **one training at a time** (10 environments fill the CPU):
+**Modal first.** `ml/modal_train.py` runs `train_mjx.py` on a Modal GPU (an L4 by
+default). Checkpoints and `log.jsonl` land in the Modal volume `capoeira-mjx-runs`,
+committed every 3 minutes, so a run that is cut off keeps what it had. Runs
+are independent: two can train at once, but start the full run only after the
+trial was judged.
+
+**Local fallback.** The same code runs on this Mac when Modal is unavailable or for
+a smoke test: `train_mjx.py` picks the device JAX finds (64 environments on a CPU,
+2048 on a GPU), and the older CPU PPO `train.py` still works. The Mac runs
+**one local training at a time** (it fills the CPU).
+
+Both write the same `.pt` files, so `check.py`, `choose.py` and `export_web.py`
+do not care which one trained a policy.
+
+Is something already training?
 
 ```sh
-ps -Ao pid,etime,command | grep "[p]ython train.py"
+uv run modal app list                       # Modal: running apps ("capoeira-mjx")
+ps -Ao pid,etime,command | grep "[t]rain"   # this Mac: train.py / train_mjx.py
 ```
 
-The `[p]` matters: a plain `pgrep -f "train.py"` inside a shell loop matches the
+The `[t]` matters: a plain `pgrep -f "train"` inside a shell loop matches the
 loop's own command line and waits forever (this cost 3½ hours once).
 
 ## Starting a run — trial first, always
 
 Every new setup (changed reward, reference, environment or skill) gets a
-**15-minute trial** before the 4-hour run:
+**15-minute trial** before the 4-hour run. From `ml/`:
 
 ```sh
+# Modal (default): --detach keeps the run going after this shell returns
+uv run modal run --detach modal_train.py --no-wait --skill <ginga|kicks|esquiva|recover> \
+  --out runs/<out> --init runs/<checkpoint>.pt --minutes 15 --steps 100e6 [--lr 5e-5] [--log-std -2.3]
+
+# Local fallback (CPU/GPU on this Mac)
 mkdir -p runs/<out>
-nohup uv run python train.py --skill <ginga|kicks|recover> --out runs/<out> \
-  --init <checkpoint> --minutes 15 --steps 100e6 --envs 10 [--lr 5e-5] [--log-std -2.3] \
+nohup uv run python train_mjx.py --skill <skill> --out runs/<out> \
+  --init runs/<checkpoint>.pt --minutes 15 --steps 100e6 [--lr 5e-5] [--log-std -2.3] \
   > runs/<out>/stdout.txt 2> runs/<out>/stderr.txt &
 ```
 
-When the trial ends: read its log (below), run the matching `check.py` for one
-minute, and record a short run for the reviewer (`--record`). Only a trial whose
-numbers move the right way earns the full run: same command, a new `--out`,
-`--init runs/<trial>/last.pt`, `--minutes 240`.
+(`train.py` takes the same flags plus `--envs 10`, and is the choice when JAX is
+not available.) The Modal run name is the last part of `--out`; use the next free
+number and never reuse one that exists in the volume or in `runs/`.
+
+When the trial ends: bring it home (below), read its log, run the matching
+`check.py` for one minute, and record a short run for the reviewer (`--record`).
+Only a trial whose numbers move the right way earns the full run: same command,
+a new `--out`, `--init runs/<trial>/last.pt`, `--minutes 240`.
 
 - Start from the best checkpoint of the same skill (or the ginga for a new skill, as the esquiva).
-- **Polishing a policy that already works: `--lr 5e-5`.** The default 3e-4 shakes
+- **Polishing a policy that already works: `--lr 5e-5`.** The default shakes
   a trained policy and it gets worse before it gets better.
-- Don't wait in a shell loop. Start the run, report its PID, start time and
-  expected end, and return; the coordinator schedules the check-ins.
+- Don't wait in a shell loop. Start the run, report where it runs (Modal app id
+  or local PID), start time and expected end, and return; the coordinator
+  schedules the check-ins.
 
 ## Watching a run
+
+Modal: `uv run modal run modal_train.py::tail --run <out>` prints the last lines
+of `log.jsonl` from the volume; `uv run modal app logs <app-id>` streams the
+stdout. When it has ended, or to test a checkpoint mid-run,
+`uv run modal run modal_train.py::fetch --run <out>` copies `best.pt`, `last.pt`
+and `log.jsonl` into `runs/<out>/`. Local: read `runs/<out>/log.jsonl` directly.
 
 `runs/<out>/log.jsonl`, one line per iteration:
 
@@ -83,8 +114,9 @@ holds crashes; the torch "requires_grad … to a scalar" warning is harmless.
 
 Compare the mean of the last 30 minutes of `reward`, `episode_s` and (recover)
 `got_up` with the 30 minutes before. If none improved for **90 minutes**, the run
-has stalled: stop it (`kill <pid>` of the `python train.py` process, never by
-name pattern), keep its `last.pt`, and report it as stalled with the `end_*`
+has stalled: stop it (Modal: `uv run modal app stop <app-id>`; local: `kill <pid>` of the
+training process, never by name pattern), keep its `last.pt` (`fetch` it first on
+Modal), and report it as stalled with the `end_*`
 shares. More time won't fix a stalled run; the setup needs a change.
 
 ## Testing
@@ -148,4 +180,5 @@ report it, don't paper over it.
 - Commit or push (the coordinator asks the user first).
 - Copy anything from `ml/data`, `ml/models` or `ml/runs` outside the project or into
   git — the reference video, its frames and landmarks are private.
-- Run two trainings at once, or long checks while a training runs (a 1–3 minute check is fine).
+- Run two local trainings at once, or long checks while a local training runs (a 1–3 minute check is fine). Modal runs are exempt.
+- Start a Modal run without saying so: it spends the credit.
