@@ -33,6 +33,7 @@ from env_consts import (
     GROUND_SITES,
     KICK_EVERY,
     KICK_MOVES,
+    KICK_SETTLE,
     KNEE_CLEAR,
     LANDINGS,
     LOST,
@@ -45,11 +46,14 @@ from env_consts import (
     MOVE_EPISODE_TAIL,
     NEVER_CONTACT,
     RECOVER_TAIL,
+    SIGMA_INIT,
+    SIGMA_ROWS,
     SKILL_MOVES,
     STRONG_ARMS,
     STUCK,
     TEMPO_CHANGE_EVERY,
     TEMPO_SKEW,
+    TERMS,
     TROUBLE_DROP,
     TROUBLE_TILT,
     WAIT_FROM,
@@ -99,6 +103,9 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
         self.success = 0.0
         self.attempts = 0
         self.vary_moves = True
+        # Tracking tolerances (env_consts.TERMS; a row for the ginga and one per move and leg) that the trainer
+        # tightens as the body improves (env_math.tighten).
+        self.sigma = np.full((SIGMA_ROWS, len(TERMS)), SIGMA_INIT)
         self.ref_data = mujoco.MjData(self.m)
         self.control_dt = self.m.opt.timestep * FRAME_SKIP
         self.max_steps = int(max_seconds / self.control_dt)
@@ -311,12 +318,6 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
             self.pool_level = None
         if self.after_recover is not None:
             self.after_recover += self.control_dt
-        # Only whole kicks count (a start in the middle of a kick is easier).
-        if self.skill in ("kicks", "esquiva") and self.from_ginga and self.choreo.kicks.level == self.curriculum:
-            finished = self.after_kick is None and not self.choreo.busy and self.kicked
-            if not self.counted and (terminated and (self.choreo.busy or self.kicked) or finished):
-                self.counted = True
-                self._attempt(not terminated)
         truncated = self.steps >= self.max_steps
         if self.choreo.move is not None:
             self.kicked = True
@@ -324,6 +325,12 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
             # A kick episode ends a while after the body is back in the ginga.
             self.after_kick = (self.after_kick or 0.0) + self.control_dt
             truncated = truncated or self.after_kick >= MOVE_EPISODE_TAIL
+        # Only whole kicks count (a start in the middle of a kick is easier), and only once the ginga has settled.
+        if self.skill in ("kicks", "esquiva") and self.from_ginga and self.choreo.kicks.level == self.curriculum:
+            finished = self.kicked and self.after_kick is not None and self.after_kick >= KICK_SETTLE
+            if not self.counted and (terminated and (self.choreo.busy or self.kicked) or finished):
+                self.counted = True
+                self._attempt(not terminated)
         if self.skill == "recover" and self.after_recover is not None:
             truncated = truncated or self.after_recover >= RECOVER_TAIL
         # Logged only, read at the end of an episode: why it ended, which landing it fell into, whether it got up.

@@ -15,6 +15,7 @@ from env_consts import (
     FRAME_SKIP,
     HEAD_ABOVE,
     KICK_EVERY,
+    KICK_SETTLE,
     LOST,
     LOW_BELOW,
     LOW_HEAD,
@@ -23,10 +24,8 @@ from env_consts import (
     MIN_BPM,
     MIN_PACE,
     MOVE_EPISODE_TAIL,
-    PIVOT_SCALE,
     PIVOT_WEIGHT,
     RECOVER_TAIL,
-    STRIKE_SCALE,
     STRIKE_WEIGHT,
     STUCK,
     TEMPO_CHANGE_EVERY,
@@ -43,8 +42,9 @@ class MjxStep:
     """Control step of MjxGingaEnv."""
 
     def step(
-        self, state: EnvState, action: jax.Array, curriculum: jax.Array, fall_level: jax.Array
+        self, state: EnvState, action: jax.Array, curriculum: jax.Array, fall_level: jax.Array, sigma: jax.Array
     ) -> tuple[EnvState, jax.Array, jax.Array, jax.Array, dict[str, jax.Array]]:
+        """`sigma`: the tracking tolerances (env_consts.TERMS), one row for the ginga and one for the moves."""
         # 1. PD target one control step ahead + policy offset
         target_next, _, _, _ = self._target(
             state.phase,
@@ -208,33 +208,35 @@ class MjxStep:
         ref_dx = mjx.kinematics(self.mx, ref_dx)
 
         q, v = dx.qpos, dx.qvel
-        joint_err = jnp.sum((q[self.joint_qpos] - q_ref[self.joint_qpos]) ** 2)
-        root_rot_err = quat_angle(q[3:7], q_ref[3:7]) ** 2
+        in_move = move_id >= 0
+        is_kick_move = in_move & (move_id < self.num_kicks)
+        joint_err = jnp.sum((q[self.joint_qpos] - q_ref[self.joint_qpos]) ** 2) + quat_angle(q[3:7], q_ref[3:7]) ** 2
         vel_err = jnp.sum((v[self.joint_qvel] - v_ref[self.joint_qvel]) ** 2)
-        ee_err = jnp.sum((self._local_effectors(dx) - self._local_effectors(ref_dx)) ** 2)
+        ee_err = jnp.sum((self._local_effectors(dx) - self._local_effectors(ref_dx)) ** 2) / len(EFFECTORS)
         is_falling_now = (recover_id >= 0) & (new_rec_t < FALL_TIME)
         root_err = jnp.where(is_falling_now, (q[1] - q_ref[1]) ** 2, jnp.sum((q[:3] - q_ref[:3]) ** 2))
         feet_err = jnp.sum(feet_mask[:, None] * (feet_now - feet_ref) ** 2)
 
-        r_pose = jnp.exp(-2.0 * (joint_err + root_rot_err))
-        r_vel = jnp.exp(-0.02 * vel_err)
-        r_ee = jnp.exp(-40.0 * ee_err / len(EFFECTORS))
-        r_root = jnp.exp(-10.0 * root_err)
-        r_feet = jnp.exp(-20.0 * feet_err)
-        base_reward = 0.4 * r_pose + 0.1 * r_vel + 0.15 * r_ee + 0.15 * r_root + 0.2 * r_feet
-
-        # Strike & pivot terms when playing a kick (move_id in 0..num_kicks-1)
-        is_kick_move = (move_id >= 0) & (move_id < self.num_kicks)
+        # A kick's own terms (move_id in 0..num_kicks-1): the kicking foot from the hips as the room sees it
+        # (strike), and the support foot's heading, heel height and ball position (pivot)
         kick_foot_body = jnp.where(side_id == 1, self.effector_ids[1], self.effector_ids[0])
         reach_err = jnp.sum(((dx.xpos[kick_foot_body] - q[:3]) - (ref_dx.xpos[kick_foot_body] - q_ref[:3])) ** 2)
-        r_strike = jnp.where(is_kick_move, jnp.exp(-STRIKE_SCALE * reach_err), 0.0)
-
         support_side = jnp.where(side_id == 1, 0, 1)
         heel_id, toe_id = self.sole_sites[support_side, 0], self.sole_sites[support_side, 1]
         d_vec = dx.site_xpos[toe_id] - dx.site_xpos[heel_id]
         r_vec = ref_dx.site_xpos[toe_id] - ref_dx.site_xpos[heel_id]
-        turn_err = (jnp.arctan2(d_vec[0], d_vec[2]) - jnp.arctan2(r_vec[0], r_vec[2]) + jnp.pi) % (2.0 * jnp.pi) - jnp.pi
-        r_pivot = jnp.where(is_kick_move, jnp.exp(-PIVOT_SCALE * (turn_err**2)), 0.0)
+        turn_err = ((jnp.arctan2(d_vec[0], d_vec[2]) - jnp.arctan2(r_vec[0], r_vec[2]) + jnp.pi) % (2.0 * jnp.pi) - jnp.pi) ** 2
+        heel_err = (dx.site_xpos[heel_id, 1] - ref_dx.site_xpos[heel_id, 1]) ** 2
+        ball_err = jnp.sum((dx.site_xpos[toe_id] - ref_dx.site_xpos[toe_id])[jnp.array([0, 2])] ** 2)
+
+        # Each term's squared error in TERMS order, scored against the tolerances of the ginga or of this move on this leg
+        err = jnp.stack([joint_err, vel_err, ee_err, root_err, feet_err, reach_err, turn_err, heel_err, ball_err])
+        row = jnp.where(in_move, 1 + 2 * move_id + side_id, 0)
+        scores = jnp.exp(-err / sigma[row])
+        r_pose, r_vel, r_ee, r_root, r_feet = scores[:5]
+        base_reward = 0.4 * r_pose + 0.1 * r_vel + 0.15 * r_ee + 0.15 * r_root + 0.2 * r_feet
+        r_strike = jnp.where(is_kick_move, scores[5], 0.0)
+        r_pivot = jnp.where(is_kick_move, jnp.prod(scores[6:]), 0.0)
 
         reward = jnp.where(
             is_kick_move,
@@ -355,10 +357,11 @@ class MjxStep:
             1,
             jnp.where(low, 2, jnp.where(drifted, 3, jnp.where(stuck, 4, jnp.where(dive, 5, 0)))),
         )
-        # Count kick curriculum attempt when the kick itself finishes (before the 3s ginga tail), matching GingaEnv
-        before_tail = state.after_kick < 0.0
-        kick_finished = before_tail & (~busy_now) & kicked
-        kick_failed_early = before_tail & terminated & (busy_now | kicked)
+        # A kick counts once the body has been back in the ginga KICK_SETTLE s, or as failed if it fell before,
+        # matching GingaEnv
+        unsettled = state.after_kick < KICK_SETTLE
+        kick_finished = unsettled & (after_kick >= KICK_SETTLE) & kicked
+        kick_failed_early = unsettled & terminated & (busy_now | kicked)
         elig = state.from_ginga & (state.level == curriculum)
         kick_attempt = elig & (kick_finished | kick_failed_early)
         kick_ok = elig & kick_finished & (~terminated)
@@ -371,7 +374,10 @@ class MjxStep:
             "ee": r_ee,
             "root": r_root,
             "feet": r_feet,
-            "kicking": (move_id >= 0).astype(jnp.float32),
+            "kicking": in_move.astype(jnp.float32),
+            "kick": is_kick_move.astype(jnp.float32),
+            "row": row,
+            "err": err,
             "strike": r_strike,
             "pivot": r_pivot,
             "down": is_rec_now.astype(jnp.float32),

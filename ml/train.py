@@ -24,7 +24,9 @@ import torch
 from torch import nn
 
 from env import GingaEnv
-from env_consts import ENDS, LANDINGS
+from env_consts import KICK_TERMS, SIGMA_INIT, SIGMA_ROWS, SIGMA_WARMUP, TERMS
+from env_math import tighten
+from train_log import ends_stats, tolerance_stats
 
 
 class RunningNorm:
@@ -135,6 +137,9 @@ def main() -> None:
     total_steps, iteration, start = 0, 0, time.time()
     log = open(out / "log.jsonl", "a")
     best = -1.0
+    # Tracking tolerances (env_consts.TERMS, a row for the ginga and one per move and leg): loose at first, then each
+    # term's running mean error, only ever tightened.
+    sigma, ema = np.full((SIGMA_ROWS, len(TERMS)), SIGMA_INIT), np.full((SIGMA_ROWS, len(TERMS)), SIGMA_INIT)
 
     while total_steps < args.steps and time.time() - start < args.minutes * 60:
         iteration += 1
@@ -142,6 +147,7 @@ def main() -> None:
         for group in optimizer.param_groups:
             group["lr"] = args.lr * max(frac, 0.1)
         parts_sum: dict[str, float] = {}
+        err_sum, err_n = np.zeros((SIGMA_ROWS, len(TERMS))), np.zeros((SIGMA_ROWS, len(TERMS)))
         for t in range(T):
             norm.update(obs)
             o = norm(obs).astype(np.float32)
@@ -159,6 +165,13 @@ def main() -> None:
             for key in ("pose", "vel", "ee", "root", "feet", "kicking", "strike", "pivot", "size", "down", "up"):
                 if key in info:
                     parts_sum[key] = parts_sum.get(key, 0) + float(np.mean(info[key]))
+            # Each term's error per tolerance row (the ginga's frames, each move's on each leg; a kick's own terms
+            # only inside a kick); an environment that was reset this step has no error to report
+            if "err" in info:
+                seen = info.get("_err", np.ones(N, bool))[:, None] & ((info["kick"] > 0.5)[:, None] | (np.arange(len(TERMS)) < KICK_TERMS))
+                rows = info["row"].astype(int)
+                np.add.at(err_sum, rows, info["err"] * seen)
+                np.add.at(err_n, rows, seen.astype(float))
             episode_len += 1
             for i in np.where(terminated | truncated)[0]:
                 finished_lengths.append(episode_len[i] * 0.03)
@@ -171,6 +184,8 @@ def main() -> None:
                     with torch.no_grad():
                         buf_boot[t, i] = agent.value(torch.from_numpy(final)).item()
         total_steps += T * N
+        sigma, ema = tighten(sigma, err_sum / np.maximum(err_n, 1), err_n, ema, iteration > SIGMA_WARMUP)
+        envs.set_attr("sigma", sigma)
 
         with torch.no_grad():
             next_value = agent.value(torch.from_numpy(norm(obs).astype(np.float32))).numpy()
@@ -217,18 +232,8 @@ def main() -> None:
             # The kick's own scores, over the time spent kicking (they are 0 the rest of the time).
             if key in stats:
                 stats[key] = round(parts_sum[key] / parts_sum["kicking"], 3) if parts_sum.get("kicking") else None
-        # Of the last 200 episodes: why they ended; and of those that fell, into which landing and how many got up
-        # (all, and of those that started from a recorded fall — the ones like a real fall).
-        ended = finished[-200:]
-        if ended:
-            stats.update({f"end_{name}": round(sum(e == k for e, *_ in ended) / len(ended), 3) for k, name in enumerate(ENDS)})
-            fell = [(landing, up) for _, landing, up, _ in ended if landing]
-            real = [up for _, landing, up, from_fall in ended if landing and from_fall]
-            if fell:
-                stats.update({f"fell_{name}": round(sum(l == k + 1 for l, _ in fell) / len(fell), 3) for k, name in enumerate(LANDINGS)})
-                stats["got_up"] = round(float(np.mean([up for _, up in fell])), 3)
-            if real:
-                stats["got_up_falls"] = round(float(np.mean(real)), 3)
+        stats.update(ends_stats(finished[-200:]))
+        stats["tol"] = tolerance_stats(sigma)
         print(json.dumps(stats), flush=True)
         log.write(json.dumps(stats) + "\n")
         log.flush()

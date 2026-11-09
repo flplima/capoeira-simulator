@@ -21,9 +21,13 @@ import jax.numpy as jnp
 import numpy as np
 import optax
 
-from env_consts import ENDS, FALL_SPEEDS, LANDINGS
+from env_consts import FALL_SPEEDS, SIGMA_INIT, SIGMA_ROWS, SIGMA_WARMUP, TERMS
+from env_math import tighten
 from env_mjx import MjxGingaEnv
+from mjx_eval import report
+from mjx_math import error_sums
 from mjx_state import EnvState
+from train_log import ends_stats, tolerance_stats
 from train_nets import (
     NormState,
     apply_mlp,
@@ -57,6 +61,9 @@ def main() -> None:
     parser.add_argument("--minibatches", type=int, default=4)
     parser.add_argument("--start-size", type=int, default=-1, help="initial curriculum size (-1: infer from --init)")
     parser.add_argument("--patience", type=int, default=100, help="early-stop iterations without improvement at max curriculum (0 disables)")
+    parser.add_argument("--focus", default="", help="a move that gets half of the practice (a new or changed one)")
+    parser.add_argument("--only", default="", help="the one move practised (a new kick learned on its own)")
+    parser.add_argument("--gated", action="store_true", help="sizes grow only on success, never on the clock")
     parser.add_argument("--cache-dir", default="", help="persistent JAX XLA compilation cache directory")
     parser.add_argument("--impl", default="jax", choices=["jax", "warp"])
     args = parser.parse_args()
@@ -74,7 +81,7 @@ def main() -> None:
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
 
-    env = MjxGingaEnv(skill=args.skill, max_seconds=40.0, impl=args.impl)
+    env = MjxGingaEnv(skill=args.skill, max_seconds=40.0, impl=args.impl, focus=args.focus, only=args.only)
     obs_size, act_size = env.obs_size, env.act_size
 
     rng = jax.random.PRNGKey(0)
@@ -109,7 +116,7 @@ def main() -> None:
     fall_level = jnp.array(start_fall, jnp.int32)
 
     v_reset = jax.jit(jax.vmap(env.reset, in_axes=(0, None, None)))
-    v_step = jax.vmap(env.step, in_axes=(0, 0, None, None))
+    v_step = jax.vmap(env.step, in_axes=(0, 0, None, None, None))
 
     env_keys = jax.random.split(k_envs, num_envs)
     env_state = v_reset(env_keys, curriculum, fall_level)
@@ -130,6 +137,7 @@ def main() -> None:
         critic_lr: jax.Array,
         curriculum: jax.Array,
         fall_level: jax.Array,
+        sigma: jax.Array,
     ):
         def rollout_step(carry, _):
             st, nrm, key = carry
@@ -142,7 +150,7 @@ def main() -> None:
             action = mean + noise * jnp.exp(params["log_std"])
             logp = gaussian_log_prob(mean, params["log_std"], action)
 
-            next_st, rew, term, trunc, info = v_step(st, action, curriculum, fall_level)
+            next_st, rew, term, trunc, info = v_step(st, action, curriculum, fall_level, sigma)
             done = term | trunc
             final_o_norm = apply_norm(nrm, info["final_obs"])
             final_val = jnp.squeeze(apply_mlp(params["critic"], final_o_norm), axis=-1)
@@ -224,7 +232,11 @@ def main() -> None:
             epoch_step, (params, opt_state, rng), None, length=args.epochs
         )
 
+        # Each tolerance row's mean squared error per term and how many frames it saw: the next tolerances (env_math.tighten)
+        err_sum, err_count = error_sums(b_info["err"], b_info["row"], b_info["kick"])
         metrics = {
+            "err_mean": err_sum / jnp.maximum(err_count, 1.0),
+            "err_count": err_count,
             "reward": jnp.mean(b_rew),
             "pose": jnp.mean(b_info["pose"]),
             "vel": jnp.mean(b_info["vel"]),
@@ -258,6 +270,17 @@ def main() -> None:
     fall_success_ema, fall_count = 0.0, 0
     stale_iters = 0
 
+    # Tracking tolerances (env_consts.TERMS): loose at first, then each term's running mean error, only ever
+    # tightened; a new size is a new task, and its tolerances start loose again.
+    def loose() -> np.ndarray:
+        return np.full((SIGMA_ROWS, len(TERMS)), SIGMA_INIT)
+
+    sigma, ema, since_loose = loose(), loose(), 0
+
+    def loosen() -> None:
+        nonlocal sigma, ema, since_loose
+        sigma, ema, since_loose = loose(), loose(), 0
+
     in_cooldown = False
     while total_steps < args.steps and (time.time() - start) < args.minutes * 60:
         iteration += 1
@@ -267,21 +290,26 @@ def main() -> None:
             in_cooldown = True
             stale_iters = 0
             params["log_std"] = jnp.minimum(params["log_std"], -2.6)
-            if args.skill in ("kicks", "esquiva") and int(curriculum) < 3:
+            # A gated run keeps the size its successes reached.
+            if not args.gated and args.skill in ("kicks", "esquiva") and int(curriculum) < 3:
                 curriculum = jnp.array(3, jnp.int32)
                 best = -1.0
-            elif args.skill == "recover" and int(fall_level) < len(FALL_SPEEDS) - 1:
+                loosen()
+            elif not args.gated and args.skill == "recover" and int(fall_level) < len(FALL_SPEEDS) - 1:
                 fall_level = jnp.array(len(FALL_SPEEDS) - 1, jnp.int32)
                 best = -1.0
+                loosen()
         frac = 0.3 if in_cooldown else max(1.0 - total_steps / args.steps, 0.3)
         critic_lr = jnp.array(args.lr * frac, jnp.float32)
         warmup = min((iteration - 1) / 5.0, 1.0) if args.init else 1.0
         actor_lr = jnp.array(args.lr * frac * warmup, jnp.float32)
 
         params, opt_state, norm, env_state, rng, m = train_iteration(
-            params, opt_state, norm, env_state, rng, actor_lr, critic_lr, curriculum, fall_level
+            params, opt_state, norm, env_state, rng, actor_lr, critic_lr, curriculum, fall_level, jnp.asarray(sigma, jnp.float32)
         )
         jax.block_until_ready(m["reward"])
+        since_loose += 1
+        sigma, ema = tighten(sigma, np.asarray(m["err_mean"]), np.asarray(m["err_count"]), ema, since_loose > SIGMA_WARMUP)
         total_steps += batch_size
         if post_jit_start is None:
             post_jit_start = time.time()
@@ -309,7 +337,7 @@ def main() -> None:
                 kick_count += 1
                 kick_success_ema += 0.1 * (rate - kick_success_ema)
         if args.skill in ("kicks", "esquiva") and int(curriculum) < 3:
-            due = elapsed_frac >= 0.18 * (int(curriculum) + 1)
+            due = not args.gated and elapsed_frac >= 0.18 * (int(curriculum) + 1)
             passed = iters_at_level >= 3 and kick_count >= 20 and kick_success_ema > 0.70
             if passed or due:
                 curriculum = jnp.array(int(curriculum) + 1, jnp.int32)
@@ -317,6 +345,7 @@ def main() -> None:
                 finished_lengths.clear()
                 finished_ends.clear()
                 best = -1.0
+                loosen()
 
         # Curriculum progression for recover
         if args.skill == "recover" and int(fall_level) < len(FALL_SPEEDS) - 1:
@@ -324,7 +353,7 @@ def main() -> None:
             if len(rec_real) >= 20:
                 fall_count += len(rec_real)
                 fall_success_ema = float(np.mean(rec_real))
-            due = elapsed_frac >= 0.18 * (int(fall_level) + 1)
+            due = not args.gated and elapsed_frac >= 0.18 * (int(fall_level) + 1)
             passed = iters_at_level >= 3 and fall_count >= 20 and fall_success_ema > 0.45
             if passed or due:
                 fall_level = jnp.array(int(fall_level) + 1, jnp.int32)
@@ -332,6 +361,7 @@ def main() -> None:
                 finished_lengths.clear()
                 finished_ends.clear()
                 best = -1.0
+                loosen()
 
         kicking_share = float(m["kicking"])
         sps = (
@@ -359,31 +389,19 @@ def main() -> None:
             "down": round(float(m["down"]), 3),
             "up": round(float(m["up"]), 3),
         }
-        if finished_ends:
-            stats.update(
-                {
-                    f"end_{name}": round(sum(e == k for e, *_ in finished_ends) / len(finished_ends), 3)
-                    for k, name in enumerate(ENDS)
-                }
-            )
-            fell = [(l, u) for _, l, u, _ in finished_ends if l > 0]
-            real = [u for _, l, u, ff in finished_ends if l > 0 and ff]
-            if fell:
-                stats.update(
-                    {
-                        f"fell_{name}": round(sum(l == k + 1 for l, _ in fell) / len(fell), 3)
-                        for k, name in enumerate(LANDINGS)
-                    }
-                )
-                stats["got_up"] = round(float(np.mean([u for _, u in fell])), 3)
-            if real:
-                stats["got_up_falls"] = round(float(np.mean(real)), 3)
+        stats.update(ends_stats(finished_ends))
+        stats["tol"] = tolerance_stats(sigma)
 
         print(json.dumps(stats), flush=True)
         log.write(json.dumps(stats) + "\n")
         log.flush()
 
-        score = stats["reward"] * (stats["episode_s"] or 1.0)
+        # best.pt: for kicks and esquivas the share of this iteration's moves finished standing (what `eval` and
+        # check.py count; thousands a run), otherwise the reward over the episode length
+        if args.skill in ("kicks", "esquiva"):
+            score = float(m["kick_oks"]) / att if att > 0 else 0.0
+        else:
+            score = stats["reward"] * (stats["episode_s"] or 1.0)
         if iteration == 1:
             save_pt_checkpoint(out / "best.pt", params, norm, obs_size, act_size, stats)
             save_pt_checkpoint(out / "last.pt", params, norm, obs_size, act_size, stats)
@@ -413,6 +431,8 @@ def main() -> None:
                 break
 
     save_pt_checkpoint(out / "last.pt", params, norm, obs_size, act_size, stats)
+    if args.skill in ("kicks", "esquiva"):
+        report(env, out, log, params, norm, (obs_size, act_size, args.log_std), num_envs, rng, curriculum, fall_level, jnp.asarray(sigma, jnp.float32))
     log.close()
 
 

@@ -22,7 +22,7 @@ import numpy as np
 
 from brain import Brain
 from env import GingaEnv
-from env_consts import DIVE, DIVE_UNTIL, DODGES, ENTRY_CENTRE, FALL_TIME, FRAME_SKIP, KICK_MOVES, LOST, MIN_PACE, STUCK
+from env_consts import DIVE, DIVE_UNTIL, DODGES, ENTRY_CENTRE, FALL_TIME, FRAME_SKIP, KICK_MOVES, KICK_SETTLE, LOST, MIN_PACE, STUCK
 from env_math import place_xz
 
 TOQUES = [("Angola", 66.0), ("São Bento Pequeno", 90.0), ("São Bento Grande", 120.0)]
@@ -67,12 +67,13 @@ def main() -> None:
     per_push = int(args.push_every / env.control_dt) if args.push_every > 0 else 0
     record = {"t": [], "qpos": [], "target": [], "label": []}
     falls = []  # per fall: landing, which way the body was going over (as it faced), during a kick?, how it ended
+    settling = None  # [move, s]: a kick just ended, and counts as done standing once the ginga has settled
     for step in range(steps):
         name, bpm = TOQUES[(step // per_toque) % len(TOQUES)]
         env.bpm = bpm
         c = env.choreo
         was_kicking = c.move
-        if per_kick and step % per_kick == per_kick - 1 and not c.busy:
+        if per_kick and step % per_kick == per_kick - 1 and not c.busy and not settling:
             move = asking[asked % len(asking)]
             asked += 1
             if choices and move in choices["moves"]:
@@ -88,6 +89,8 @@ def main() -> None:
             angle = rng.uniform(-np.pi, np.pi)
             env.push(args.push * np.array([np.cos(angle), np.sin(angle)]))
         was_recovering = c.recover is not None
+        # A fall during a kick, or in the ginga before it settled, is that kick's.
+        blamed = was_kicking or (settling[0] if settling else None)
         action = brain(env, obs)
         env.act(action)
         chest = m.body("chest").id
@@ -105,15 +108,16 @@ def main() -> None:
         if brain.recover:
             if c.recover is None and not was_recovering and env.trouble():
                 s["falls"] += 1
-                if was_kicking:
-                    kicks[was_kicking]["fell"] += 1
+                if blamed:
+                    kicks[blamed]["fell"] += 1
+                settling = None
                 lean = env.lean()
                 env.choreo.begin_recover(d.qpos.copy(), lean, env.bent(), float(d.qvel[1]))
                 yaw = c.recover["place"][2]
                 side_way = np.cos(yaw) * lean[0] - np.sin(yaw) * lean[1]
                 forward = np.sin(yaw) * lean[0] + np.cos(yaw) * lean[1]
                 way = ("forward" if forward > 0 else "back") if abs(forward) >= abs(side_way) else ("left" if side_way > 0 else "right")
-                falls.append({"landing": f"{c.recover['move']} {c.recover['side']}", "way": way, "kick": was_kicking, "end": None})
+                falls.append({"landing": f"{c.recover['move']} {c.recover['side']}", "way": way, "kick": blamed, "end": None})
                 stuck = 0.0
                 obs = env._observe()
                 continue
@@ -146,10 +150,16 @@ def main() -> None:
             fallen = env.low(env.ref_data) or env._contacts()[1]
         if not brain.recover and fallen and not down:
             s["falls"] += 1
-            if was_kicking:
-                kicks[was_kicking]["fell"] += 1
+            if blamed:
+                kicks[blamed]["fell"] += 1
+            settling = None
         elif was_kicking and c.move is None:
-            kicks[was_kicking]["done"] += 1
+            settling = [was_kicking, 0.0]
+        elif settling and c.move is None:
+            settling[1] += env.control_dt
+            if settling[1] >= KICK_SETTLE:
+                kicks[settling[0]]["done"] += 1
+                settling = None
         down = fallen
         if fallen:
             env.reset(options={"phase": env.phase, "bpm": bpm, "moves": False})
@@ -169,7 +179,7 @@ def main() -> None:
             f"planted foot {np.median(s['corner']) * 100:.1f} cm from its corner (median), hips {np.mean(s['height']):.2f} m"
         )
     for move, k in kicks.items():
-        print(f"  {move:18s} asked {k['asked']}, finished standing {k['done']}, fell during it {k['fell']}")
+        print(f"  {move:18s} asked {k['asked']}, finished standing {k['done']} (still up {KICK_SETTLE:g} s into the ginga), fell during it or before then {k['fell']}")
     if falls:
         print("  falls, by landing (how they ended: up = stood and gingou again; head = head or neck hit the floor;")
         print("  dive = going down or just landed, the head 0.3 m below the reference's;")
@@ -187,7 +197,7 @@ def main() -> None:
                 chosen = {l: sum(f["landing"] == l for f in group) for l in sorted({f["landing"] for f in group})}
                 print(f"    {way:8s} {len(group):3d}: " + ", ".join(f"{l} {n}" for l, n in chosen.items()))
         during = [f for f in falls if f["kick"]]
-        print(f"  {len(during)} of {len(falls)} falls began during a kick")
+        print(f"  {len(during)} of {len(falls)} falls began during a kick or before the ginga after it settled")
     if args.record:
         np.savez_compressed(args.record, **{k: np.array(v) for k, v in record.items()})
         print("recorded", args.record)

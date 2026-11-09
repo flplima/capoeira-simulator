@@ -13,6 +13,7 @@ committing `best.pt`, `last.pt` and `log.jsonl` to Modal Volume
     uv run modal run --detach modal_train.py --no-wait --skill kicks --minutes 30 --out runs/mjx_kicks --init runs/expert_kicks11/last.pt
 
 Without `--no-wait` the entrypoint blocks and saves the checkpoints to `runs/<out>/` itself.
+`--gpu A100-40GB` (or A10G, H100…) picks another GPU than the L4, with `--envs` to match its memory.
 
 Watch a run and bring its checkpoints home:
     uv run modal run modal_train.py::tail --run mjx_kicks
@@ -55,7 +56,9 @@ image = (
     .add_local_file(HERE / "mjx_reset.py", "/workspace/mjx_reset.py")
     .add_local_file(HERE / "mjx_step.py", "/workspace/mjx_step.py")
     .add_local_file(HERE / "env_mjx.py", "/workspace/env_mjx.py")
+    .add_local_file(HERE / "mjx_eval.py", "/workspace/mjx_eval.py")
     .add_local_file(HERE / "train_nets.py", "/workspace/train_nets.py")
+    .add_local_file(HERE / "train_log.py", "/workspace/train_log.py")
     .add_local_file(HERE / "train_mjx.py", "/workspace/train_mjx.py")
     .add_local_dir(HERE / "data", "/workspace/data")
 )
@@ -64,7 +67,8 @@ vol = modal.Volume.from_name("capoeira-mjx-runs", create_if_missing=True)
 app = modal.App("capoeira-mjx", image=image)
 
 
-@app.function(gpu="L4", timeout=60 * 60 * 2, volumes={"/runs": vol})
+# Room for the 4-hour full run, plus compiling and the last checkpoint.
+@app.function(gpu="L4", timeout=60 * 60 * 5, volumes={"/runs": vol})
 def remote_train(
     run_name: str,
     steps: float,
@@ -78,6 +82,9 @@ def remote_train(
     minibatches: int,
     start_size: int,
     patience: int,
+    focus: str,
+    only: str,
+    gated: bool,
     init_bytes: bytes | None,
 ) -> dict[str, bytes]:
     import os
@@ -116,11 +123,17 @@ def remote_train(
         str(start_size),
         "--patience",
         str(patience),
+        "--focus",
+        focus,
+        "--only",
+        only,
         "--cache-dir",
         str(cache_dir),
         "--out",
         str(out_dir),
     ]
+    if gated:
+        cmd.append("--gated")
     if init_bytes is not None:
         init_path = Path("/tmp/init.pt")
         init_path.write_bytes(init_bytes)
@@ -162,6 +175,10 @@ def main(
     minibatches: int = 4,
     start_size: int = -1,
     patience: int = 100,
+    focus: str = "",
+    only: str = "",
+    gated: bool = False,
+    gpu: str = "L4",
     wait: bool = True,
 ) -> None:
     init_bytes = None
@@ -187,13 +204,17 @@ def main(
         minibatches=minibatches,
         start_size=start_size,
         patience=patience,
+        focus=focus,
+        only=only,
+        gated=gated,
         init_bytes=init_bytes,
     )
+    train = remote_train.with_options(gpu=gpu)
     if not wait:
-        call = remote_train.spawn(**train_args)
-        print(f"Started {run_name} on Modal (call {call.object_id}); `modal_train.py::fetch --run {run_name}` brings it home.")
+        call = train.spawn(**train_args)
+        print(f"Started {run_name} on a Modal {gpu} (call {call.object_id}); `modal_train.py::fetch --run {run_name}` brings it home.")
         return
-    artifacts = remote_train.remote(**train_args)
+    artifacts = train.remote(**train_args)
 
     if not local_out.is_absolute():
         local_out = HERE / local_out

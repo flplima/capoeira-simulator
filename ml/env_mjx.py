@@ -29,6 +29,8 @@ class MjxGingaEnv(MjxTarget, MjxReset, MjxStep):
         skill: str = "ginga",
         max_seconds: float = 40.0,
         impl: str = "jax",
+        focus: str = "",
+        only: str = "",
     ):
         self.skill = skill
         self.m, self.mx = load_mjx_model(xml, impl=impl, strong_arms=(skill == "recover"))
@@ -85,6 +87,10 @@ class MjxGingaEnv(MjxTarget, MjxReset, MjxStep):
             self.skill_moves = jnp.arange(len(KICK_MOVES), len(MOVES), dtype=jnp.int32)
         else:
             self.skill_moves = jnp.arange(len(MOVES), dtype=jnp.int32)
+        if focus:  # half the draws go to this move, the rest are shared as before
+            self.skill_moves = jnp.concatenate([self.skill_moves, jnp.full(len(self.skill_moves), MOVES.index(focus), jnp.int32)])
+        if only:  # every draw goes to this move
+            self.skill_moves = jnp.array([MOVES.index(only)], jnp.int32)
 
         self.obs_size = 138 + len(EXTRA_MOVES)
         self.act_size = int(self.m.nu)

@@ -1,9 +1,11 @@
-"""Pure JAX quaternion, heading and floor-placement helpers (the jnp counterparts of env_math.py)."""
+"""Pure JAX quaternion, heading, floor-placement and tolerance helpers (the jnp counterparts of env_math.py)."""
 
 from __future__ import annotations
 
 import jax
 import jax.numpy as jnp
+
+from env_consts import KICK_TERMS, SIGMA_ROWS, TERMS
 
 
 def quat_mul(a: jax.Array, b: jax.Array) -> jax.Array:
@@ -91,3 +93,11 @@ def place_pose(frame: jax.Array, q: jax.Array, v: jax.Array, feet: jax.Array) ->
 def smoothstep(x: jax.Array) -> jax.Array:
     x = jnp.clip(x, 0.0, 1.0)
     return x * x * (3.0 - 2.0 * x)
+
+
+def error_sums(err: jax.Array, row: jax.Array, kick: jax.Array) -> tuple[jax.Array, jax.Array]:
+    """Each tolerance row's summed squared errors per term and how many frames it saw, over a batch of steps
+    (steps × envs): a kick's own terms (env_consts.KICK_TERMS on) count only inside a kick."""
+    seen = jnp.where(kick[..., None] > 0.5, 1.0, (jnp.arange(len(TERMS)) < KICK_TERMS).astype(jnp.float32))
+    onehot = jax.nn.one_hot(row, SIGMA_ROWS, dtype=jnp.float32)
+    return jnp.einsum("tnr,tnk->rk", onehot, err * seen), jnp.einsum("tnr,tnk->rk", onehot, seen)

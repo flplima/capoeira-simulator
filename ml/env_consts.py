@@ -19,13 +19,33 @@ def tempo_input(bpm: float) -> float:
 
 KICK_MOVES = ["martelo", "bencao", "meia-lua-de-frente", "queixada", "ponteira", "joelhada", "meia-lua-de-compasso"]
 # While a kick is under way, this share of the reward pays for the kicking foot being where the reference's is,
-# relative to the hips but not to their heading (GingaEnv._reward "strike"): 0.3 m off scores exp(-4·0.09) ≈ 0.7.
-STRIKE_WEIGHT, STRIKE_SCALE = 0.15, 4.0
-# …and this share for the support foot pointing where the reference's does (its heading, "pivot"): 30° off
-# scores exp(-2·0.27) ≈ 0.58.
-PIVOT_WEIGHT, PIVOT_SCALE = 0.1, 2.0
+# relative to the hips but not to their heading (GingaEnv._reward "strike")…
+STRIKE_WEIGHT = 0.15
+# …and this share for the support foot turning as the reference's does ("pivot"): pointing the same way, its heel
+# as high (a martelo turns on the ball, heel 7 cm up) and its ball where the reference's is. Without the heel and
+# the ball the body turned its foot flat and slid it 0.3–0.7 m a kick.
+PIVOT_WEIGHT = 0.2
+# Every tracking term scores exp(-error²/σ), and σ is a tolerance the training sets itself: the running mean of
+# that term's error, only ever tightened (KungfuBot, Xie et al. 2025). At first everything is loose; as the body
+# gets closer the tolerance follows it down, and an error it never closes — a reference that is itself an
+# estimate, from one camera or keyframes — stays loose instead of costing reward forever. One set of tolerances
+# for the ginga (and the floor) and one for each move on each leg (SIGMA_ROWS): tolerances shared between moves
+# let the one that learns first set a bar the others score zero against, and never learn (the right martelo at
+# 85 %, the left frozen at 10 %; the martelo frozen at 0 among keyframe kicks at 90 %).
+# The errors are summed squares: joint angles with the root's turn (rad²), joint velocities, the hands, feet and
+# head as the body faces (m², per effector), the root (m²), the feet on the triangle (m²), the kicking foot from
+# the hips (m²), and the support foot's heading (rad²), heel height (m²) and ball position (m²).
+TERMS = ["pose", "vel", "ee", "root", "feet", "strike", "turn", "heel", "ball"]
+KICK_TERMS = TERMS.index("strike")  # from here on, a kick's own terms: counted only inside a kick
+SIGMA_INIT = 1e3  # loose enough that the first iteration's errors replace it
+SIGMA_EMA = 0.2  # share of an iteration's mean error that moves the running mean
+SIGMA_FLOOR = 1e-6  # a tolerance never tightens below this (squared units)
+# Iterations after a (re)start during which a tolerance follows its running mean both ways before it only tightens:
+# the first iterations' errors all come from fresh starts, with the body still on the reference, and run low.
+SIGMA_WARMUP = 5
 DODGES = ["esquiva", "esquiva-baixa", "cocorinha"]  # see esquiva.py
 MOVES = KICK_MOVES + DODGES
+SIGMA_ROWS = 1 + 2 * len(MOVES)  # tolerance rows: the ginga, then each move on the left leg and on the right
 EXTRA_MOVES = ["meia-lua-de-frente", "queixada", "ponteira", "joelhada", "meia-lua-de-compasso", "esquiva-baixa", "cocorinha"]
 # What each practice skill asks for (GingaEnv skill), and which network plays each move (brain.py).
 SKILL_MOVES = {"kicks": KICK_MOVES, "esquiva": DODGES, "all": MOVES}
@@ -40,6 +60,9 @@ ANCHOR_LIMIT = 0.25  # m: furthest a kick follows its support foot away from the
 # before handing back (brain.MOVE_HANDBACK), so it practises getting all the way back into a settled ginga —
 # the ginga network fell from what it was handed after 1 s.
 MOVE_EPISODE_TAIL = 3.0
+# s of ginga after a kick before it counts as done standing (curriculum, best checkpoint, check.py): bodies that
+# ended a turning kick twisted fell 0.3–1.2 s into the ginga, after the kick had already counted.
+KICK_SETTLE = 1.0
 GINGA_FIRST = 0.3  # share of kick and esquiva practice episodes that start in the plain ginga and wait for the entry
 
 LANDINGS = ["quatro", "negativa", "joelhos"]  # see floor.py

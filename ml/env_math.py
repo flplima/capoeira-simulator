@@ -3,6 +3,8 @@
 import mujoco
 import numpy as np
 
+from env_consts import SIGMA_EMA, SIGMA_FLOOR, SIGMA_INIT
+
 # Small quaternion helpers (w, x, y, z) — scipy's Rotation is too slow per step.
 
 
@@ -24,6 +26,18 @@ def quat_conj(q: np.ndarray) -> np.ndarray:
 def quat_angle(a: np.ndarray, b: np.ndarray) -> float:
     """Angle (rad) of the rotation between two unit quaternions."""
     return 2.0 * np.arccos(min(1.0, abs(float(np.dot(a, b)))))
+
+
+def tighten(sigma: np.ndarray, mean_err: np.ndarray, count: np.ndarray, ema: np.ndarray, ratchet: bool) -> tuple[np.ndarray, np.ndarray]:
+    """The tolerances after a training iteration (env_consts.TERMS): each term's running mean error where the term was
+    seen (count > 0) — and, once `ratchet` (past SIGMA_WARMUP iterations), only ever tightened. Until then, and for a
+    term seen for the first time, the running mean is just this iteration's mean, so the ratchet starts from a
+    level the first, unrepresentative iterations haven't pulled down."""
+    seen = count > 0
+    first = ema >= SIGMA_INIT
+    ema = np.where(seen, np.where(first | (not ratchet), mean_err, ema + SIGMA_EMA * (mean_err - ema)), ema)
+    level = np.maximum(ema, SIGMA_FLOOR)
+    return np.where(seen, np.minimum(sigma, level) if ratchet else level, sigma), ema
 
 
 def nlerp(a: np.ndarray, b: np.ndarray, t: float) -> np.ndarray:

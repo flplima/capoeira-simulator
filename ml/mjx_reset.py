@@ -14,7 +14,10 @@ from mjx_state import EnvState
 class MjxReset:
     """Episode start of MjxGingaEnv."""
 
-    def reset(self, rng: jax.Array, curriculum: jax.Array, fall_level: jax.Array) -> EnvState:
+    def reset(
+        self, rng: jax.Array, curriculum: jax.Array, fall_level: jax.Array, pending: tuple[jax.Array, jax.Array] | None = None
+    ) -> EnvState:
+        """`pending` (move, side): an evaluation start — the plain ginga, waiting to enter that move at the current size."""
         (
             rng,
             k_phase,
@@ -76,6 +79,12 @@ class MjxReset:
             rand_anc = jax.random.uniform(k_anc, (2,), minval=-ANCHOR_LIMIT, maxval=ANCHOR_LIMIT) * 0.5
             anchor = jnp.where(noisy, rand_anc, jnp.zeros(2, jnp.float32))
             phase = jnp.where(move_id >= 0, entry, phase)
+
+        if pending is not None:
+            pending_move, pending_side = pending
+            pending_entry = jnp.where(pending_side == 1, 0.0, 0.5)
+            move_id, kick_t, level = jnp.array(-1, jnp.int32), jnp.array(0.0, jnp.float32), curriculum
+            noisy, from_ginga, anchor = jnp.array(False), jnp.array(True), jnp.zeros(2, jnp.float32)
 
         # Recovery reset (skill == "recover")
         recover_id = jnp.array(-1, jnp.int32)
