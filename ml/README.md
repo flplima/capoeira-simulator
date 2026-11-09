@@ -96,6 +96,19 @@ uv run python capture.py <vídeo> 4.5 19 data/ginga.npz
 uv run python retarget.py data/ginga.npz 4.84 11.2 data/ginga_fit.npz       # câmera da frente
 uv run python retarget.py data/ginga.npz 11.3 18.1 data/ginga_fit_side.npz  # câmera do lado
 uv run python reference.py                                                  # → data/ginga_ref.npz
+# em teste, no lugar do capture.py: GVHMR na GPU do Modal, uma câmera, com o caminho do corpo no mundo
+uv run modal run hmr_modal.py --video data/youtube/ZCLVQIfaPHE.mp4 --start 7.3 --end 12.2 --out data/martelo_hmr.npz --static
+# vários vídeos de uma vez: cortes de cena → GVHMR em paralelo → que golpes cada trecho tem e onde começam e acabam de pé
+uv run python video_shots.py --intro 6.8 data/youtube/*.mp4 > data/youtube/segments.json
+uv run modal run hmr_modal.py::batch --jobs data/youtube/segments.json --out data/hmr
+uv run python clip_score.py data/hmr/*.npz --json data/hmr/moves.json
+uv run python clip_speed.py data/hmr/ZCLVQIfaPHE_6.8s.npz 4 13.0 41.0 data/martelo_real.npz    # o replay em câmera lenta no tempo real
+uv run python retarget.py data/martelo_real.npz 13.0 19.97 data/martelo_fit_real.npz           # martelo, Capoeira Nantes
+uv run python plant_clip.py data/martelo_real.npz data/martelo_fit_real.npz 13.7 15.1 data/martelo_r_ref_real.npz  # do golpe ao pouso, pés plantados, peso sobre o apoio
+uv run python clip_mirror.py data/martelo_real.npz data/martelo_real_mirror.npz             # a outra perna, espelhada (o vídeo só mostra uma bem)
+uv run python retarget.py data/martelo_real_mirror.npz 13.0 19.97 data/martelo_fit_real_mirror.npz
+uv run python plant_clip.py data/martelo_real_mirror.npz data/martelo_fit_real_mirror.npz 13.7 15.1 data/martelo_l_ref_mirror.npz
+# no Linux sem tela, o viz.py precisa de MUJOCO_GL=egl
 uv run modal run --detach modal_train.py --no-wait --skill ginga --minutes 180 --out runs/ginga_tempo --init runs/ginga_tri/last.pt --log-std -2.0
 uv run modal run modal_train.py::fetch --run ginga_tempo                    # traz best.pt, last.pt e log.jsonl para runs/
 (cd .. && npx --yes tsx@4.19.2 scripts/sample-clips.ts martelo bencao > ml/data/clips.json)

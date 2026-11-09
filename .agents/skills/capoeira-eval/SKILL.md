@@ -55,7 +55,8 @@ Every new setup (changed reward, reference, environment or skill) gets a
 ```sh
 # Modal (default): --detach keeps the run going after this shell returns
 uv run modal run --detach modal_train.py --no-wait --skill <ginga|kicks|esquiva|recover> \
-  --out runs/<out> --init runs/<checkpoint>.pt --minutes 15 --steps 100e6 [--lr 5e-5] [--log-std -2.3]
+  --out runs/<out> --init runs/<checkpoint>.pt --minutes 15 --steps 100e6 [--lr 5e-5] [--log-std -2.3] \
+  [--gpu A100-40GB --envs 4096]   # another GPU than the L4, with the environments its memory takes
 
 # Local fallback (CPU/GPU on this Mac)
 mkdir -p runs/<out>
@@ -87,12 +88,22 @@ of `log.jsonl` from the volume; `uv run modal app logs <app-id>` streams the
 stdout. When it has ended, or to test a checkpoint mid-run,
 `uv run modal run modal_train.py::fetch --run <out>` copies `best.pt`, `last.pt`
 and `log.jsonl` into `runs/<out>/`. Local: read `runs/<out>/log.jsonl` directly.
+`best.pt` is the iteration with the highest share of moves finished standing (kicks
+and esquiva runs; the measure `eval` and `check.py` use) or the highest reward ×
+episode length (other skills); it starts over at every curriculum size.
 
 `runs/<out>/log.jsonl`, one line per iteration:
 
 - `reward` 0–1, `episode_s` (mean episode length in seconds — longer is better),
-  `pose`/`vel`/`ee`/`root`/`feet` (how closely the body tracks the reference, 0–1),
   `std` (exploration noise).
+- `tol`: the tracking tolerances per term, for the ginga and for each move on each
+  leg (`martelo_l`, `martelo_r`, …), as RMS errors (rad for `pose` and `turn`, m for
+  the rest). The trainer sets each to that term's running mean error and only ever
+  tightens it, so **`tol` falling is progress**, and a leg or move whose row stays
+  far above its twin's is the one not learning (compare `martelo_l` with
+  `martelo_r`). `pose`/`vel`/`ee`/`root`/`feet`/`strike`/`pivot` are the scores
+  against those tolerances and sit around 0.4–0.6 by construction; compare `tol`,
+  not them, between runs.
 - Shares of time, not scores: `kicking` (inside a kick), `down` (falling or
   getting up), `up` (back in the ginga after getting up). `size` = curriculum level: kick or esquiva size (max ≈ 3), or with `--skill recover` the
   fall speed recorded falls start with (0 = at rest, 1 = 35 %, 2 = 70 %, 3 = full).
@@ -105,6 +116,13 @@ and `log.jsonl` into `runs/<out>/`. Local: read `runs/<out>/log.jsonl` directly.
 - **Recover only**, over the last 200 episodes that fell: `fell_<landing>` (share
   per landing pose) and `got_up` (share that reached the ginga again). Training
   also starts 50 % of episodes on the floor or partway up, so `got_up` in training reads higher than in `check.py`.
+
+- **`eval`** (kicks and esquiva runs, the last line of the log): the trainer's own
+  test at the end of the run, on `last.pt` and `best.pt` — every environment asks for one
+  move from the ginga, played without exploration noise, and `{move: {leg: [finished
+  standing, asked]}}` counts them the way `check.py` does. With 8192 environments
+  that is ~580 kicks per move and leg, against `check.py`'s ~26: trust `eval` to rank
+  checkpoints and runs; use `check.py` for the ginga hand-off and the eye.
 
 Red flags: `episode_s` collapsing, `pose` < 0.1 for long, `std` growing, `nan`,
 or one `end_*` reason dominating (> 0.6) — that names what to fix. `stderr.txt`
@@ -153,7 +171,7 @@ Add `--record <file>.npz` to keep the run for the reviewer (see `capoeira-render
 | ginga falls | — | 0 per tempo in 5 min |
 | planted foot from its corner | — | median ≤ 5 cm |
 | furthest from the triangle centre | — | ≤ 0.35 m |
-| kicks finished standing | — | ≥ 14/18 per kick |
+| kicks finished standing (still up 1 s into the ginga after it) | — | ≥ 14/18 per kick |
 | esquivas finished standing (`--esquiva`) | > 0 at size 0, `size` rising in the log | ≥ 17/18 at full size |
 | recover: falls that end `up` (check.py) | > 0, and `got_up` rising in the log | ≥ 80 % |
 | recover: `head` endings | falling vs. the previous run | ≤ 10 % of falls |

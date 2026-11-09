@@ -6,9 +6,29 @@ Continuação do [pipeline](README.md#pipeline): a recompensa, o treino, o naveg
   (40 %), velocidades (10 %), posição de mãos, pés e cabeça (15 %), da raiz
   (15 %) e de cada pé no seu ponto do triângulo, no mundo (20 %). As mãos,
   pés e cabeça são medidos virados para onde o corpo olha, então durante um
-  golpe 20 % da recompensa vai para onde o pé do chute está em relação ao
+  golpe 15 % da recompensa vai para onde o pé do chute está em relação ao
   quadril sem descontar esse giro (`strike`): um martelo que sai para o lado
-  sem o quadril virar perde ali o que ganhava nos outros termos. O episódio
+  sem o quadril virar perde ali o que ganhava nos outros termos, e 20 % vai
+  para o pé de apoio girar como o da referência (`pivot`): a direção do pé, a
+  altura do calcanhar e a bola do pé parada onde a da referência está (no
+  martelo o pé gira na bola, calcanhar 7 cm acima). Sem o calcanhar e a bola,
+  o corpo girava o pé chapado e o arrastava 0,3–0,7 m a cada golpe. Cada
+  termo vale exp(−erro²/σ), e a tolerância σ é o próprio treino que põe
+  (`env_consts.TERMS`, `env_math.tighten`): a média corrente do erro daquele
+  termo, só apertando depois das primeiras iterações (como no KungfuBot, Xie
+  et al. 2025; as primeiras, todas de episódios recém-começados, erram pouco
+  demais para servir de piso). No começo tudo é
+  folgado; conforme o corpo chega mais perto, a tolerância desce atrás dele,
+  e um erro que ele nunca fecha — uma referência que é só uma estimativa, de
+  uma câmera ou de quadros-chave — fica folgado em vez de custar recompensa
+  para sempre. Há um jogo de tolerâncias para a ginga (e o chão) e um para
+  cada golpe ou esquiva em cada perna: com um jogo só para todos os golpes, o
+  que aprende primeiro aperta a tolerância a um ponto em que os outros pontuam
+  zero e param de aprender (o martelo direito chegou a 85 % enquanto o
+  esquerdo ficou em 10 %; o martelo do vídeo ficou em zero no meio de golpes
+  de quadros-chave a 90 %). A cada tamanho novo do currículo elas voltam a folgar.
+  No `log.jsonl` elas aparecem como erro RMS por termo (`tol`), que é a medida
+  de progresso: a recompensa em si fica perto de e⁻¹ por construção. O episódio
   acaba quando algo além de mãos e pés toca o chão, a cabeça desce demais ou o
   corpo se afasta 0,5 m da referência; começa em uma fase e um andamento
   aleatórios e dura até 40 s, com o toque mudando de vez em quando (em média
@@ -17,13 +37,19 @@ Continuação do [pipeline](README.md#pipeline): a recompensa, o treino, o naveg
 - **Treino (modal_train.py, train_mjx.py, train.py).** PPO com GAE, rede MLP
   de 512–256 para política e valor, observações normalizadas. O padrão é o
   Modal: `modal_train.py` roda o `train_mjx.py` (MuJoCo em JAX, 2048
-  simulações em paralelo) numa GPU, e os checkpoints ficam no volume
+  simulações em paralelo) numa GPU (L4 por padrão; `--gpu` troca, com
+  `--envs` à altura da memória), e os checkpoints ficam no volume
   `capoeira-mjx-runs` até `modal_train.py::fetch` trazê-los para `runs/`.
   No próprio Mac, o `train_mjx.py` roda na CPU (64 simulações) e o `train.py`
   é o PPO original em PyTorch (12 simulações na CPU); os três gravam o mesmo
   formato de `.pt`.
   `--init` parte de um checkpoint anterior (entradas novas começam com peso
-  zero).
+  zero). Um golpe só conta como feito de pé depois de 1 s de volta na ginga
+  (`KICK_SETTLE`, também no `check.py`): o corpo que acabava um golpe girado
+  caía logo depois, com o golpe já contado. O tamanho do golpe sobe quando 70 % termina de pé ou, no máximo, a
+  cada 18 % do tempo, e aos 75 % vai ao tamanho inteiro; `--gated` tira o
+  relógio e o tamanho só sobe com o acerto, para um golpe novo. `--focus`
+  dá metade dos golpes a um movimento, `--only` dá todos.
 - **No navegador (src/sim/simulation.ts).** O mesmo `humanoid.xml` roda no
   MuJoCo 3.15 compilado para WebAssembly (`@mujoco/mujoco`, a mesma versão do
   Python). A cada 0,03 s o app monta a observação exatamente como o `env.py`,

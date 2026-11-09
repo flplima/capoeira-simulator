@@ -23,10 +23,34 @@ Continuação do [pipeline](README.md#pipeline): os golpes, a esquiva, o cair e 
   inclina 27° para longe da perna (antes 18°) e o peito do pé chega a 1,37 m.
   A bênção inclinava o tronco 5° para a frente; agora inclina 15° para trás,
   com o pé de apoio chapado, e a sola chega à altura do peito (ponta do pé a
-  1,36 m, antes 1,13 m). Cada golpe é amostrado a 30 quadros/s para as duas
+  1,36 m, antes 1,13 m). Agora o martelo vem de um capoeirista de verdade
+  num vídeo (Capoeira Nantes, `ZCLVQIfaPHE`, um martelo de cada perna): o
+  GVHMR (`hmr_modal.py`, na GPU do Modal) tira o corpo em 3D com o caminho
+  no chão, o `retarget.py` ajusta o esqueleto e o `plant_clip.py` planta os
+  pés onde o vídeo pisa, com o peso sobre o apoio e o giro na ponta do pé.
+  O trecho usado é o replay em câmera lenta do vídeo (4 vezes mais devagar;
+  o `clip_speed.py` o devolve ao tempo real, com 4 vezes os quadros da tomada
+  normal), cortado de logo antes de o joelho subir até o corpo pousar e
+  assentar de pé (1,4 s na direita, 2,0 s na esquerda, reamostrados para um
+  comprimento só): o corte anterior parava com o joelho recolhido no alto e
+  voltava para a base por mistura, e o corpo caía 0,3–1,2 s depois do golpe.
+  O pouso é uma base larga e baixa com o tronco inclinado para a frente, como
+  no vídeo (conferido sobre a imagem do GVHMR). A esquerda é o espelho da
+  direita (`clip_mirror.py`): o ajuste do vídeo inteiro perde o capoeirista
+  no fim do replay, e o ajuste só do replay pousa a esquerda com o ponto de
+  momento zero a 39 cm do apoio (19 cm na direita) — a rede ficava de pé nela
+  3 vezes menos. A mistura
+  com a base acontece antes e depois do trecho do vídeo, não por cima dele. Cada golpe é amostrado a 30 quadros/s para as duas
   pernas (`scripts/sample-clips.ts`), convertido em ângulos do modelo e
-  plantado por IK: o pé de apoio fica no seu canto da frente o tempo todo
-  (girando no lugar), o pé que chuta sai do canto de trás e volta para ele.
+  plantado por IK: o pé de apoio fica no seu canto da frente o tempo todo;
+  quando gira (no martelo, na queixada, na meia-lua de compasso), gira na
+  ponta: o calcanhar sobe conforme o pé vira, de 15° (ainda chapado) a 35°
+  (7 cm), a ponta fica parada e o peso vai para cima dela. O corpo
+  simulado não gira um pé chapado, e no martelo do vídeo, com o calcanhar a
+  1–4 cm do chão, o quadril não virava: a rede caía em 34 de 35 martelos. O pé que chuta sai do canto de trás e volta para ele num arco de até 8 cm
+  do chão, indo de onde a pose o leva para o canto aos poucos (antes, o pé
+  no ar era puxado direto para o canto: o chão teria de puxar o corpo para
+  baixo, e a ponta do pé arrastava até 1,2 m no chão).
   A ginga entra no golpe a partir da base com a perna que chuta atrás (fase 0
   para a direita, 0,5 para a esquerda, com até ±0,1 de folga), congela a fase
   enquanto o golpe acontece, mistura a pose da ginga com a do golpe nos
