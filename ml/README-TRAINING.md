@@ -49,18 +49,20 @@ Continuação do [pipeline](README.md#pipeline): a recompensa, o treino, o naveg
   caía logo depois, com o golpe já contado. O tamanho do golpe sobe quando 70 % termina de pé ou, no máximo, a
   cada 18 % do tempo, e aos 75 % vai ao tamanho inteiro; `--gated` tira o
   relógio e o tamanho só sobe com o acerto, para um golpe novo. `--focus`
-  dá metade dos golpes a um movimento, `--only` dá todos. `--mirror` treina
-  também com o espelho de cada lote (`env_mirror.py`): a referência da ginga
-  é o próprio espelho meio ciclo adiante, o triângulo é simétrico e a perna
-  esquerda de cada golpe espelha a direita, então um estado espelhado vale
-  tanto quanto o original e a rede deve agir nele espelhada (Abdolhosseini et
-  al. 2019). Cada amostra entra duas vezes, a segunda com observação e ação
-  espelhadas (x troca de sinal, esquerda e direita trocam, a torção e a
-  inclinação lateral do tronco trocam de sinal, a fase da ginga anda meio
-  ciclo), com a mesma vantagem: um golpe aprende as duas pernas de uma vez.
-  Sem isso o martelo direito chegou a 85 % com o esquerdo em 12 %, e só o
-  currículo do tamanho 0 recuperou a esquerda. `uv run python env_mirror.py`
-  confere que a observação do estado espelhado é a observação espelhada.
+  dá metade dos golpes a um movimento, `--only` dá todos. `--mirror` soma à
+  perda do PPO uma perda de simetria (`env_mirror.py`, `train_ppo.py`): a
+  referência da ginga é o próprio espelho meio ciclo adiante, o triângulo é
+  simétrico e a perna esquerda de cada golpe espelha a direita, então a rede
+  deve agir no estado espelhado com a ação espelhada (x troca de sinal,
+  esquerda e direita trocam, a torção e a inclinação lateral do tronco trocam
+  de sinal, a fase da ginga anda meio ciclo). A perda é o erro quadrático
+  entre a ação média no estado espelhado e o espelho da ação média, com peso
+  4 (o método LOSS de Abdolhosseini et al. 2019); `sym` no log é esse erro em
+  RMS e deve cair para perto de zero. Assim o que uma perna aprende passa
+  para a outra: sem isso o martelo direito chegou a 85 % com o esquerdo em
+  12 %, e só o currículo do tamanho 0 recuperou a esquerda. `uv run python
+  env_mirror.py` confere que a observação do estado espelhado é a observação
+  espelhada.
 - **No navegador (src/sim/simulation.ts).** O mesmo `humanoid.xml` roda no
   MuJoCo 3.15 compilado para WebAssembly (`@mujoco/mujoco`, a mesma versão do
   Python). A cada 0,03 s o app monta a observação exatamente como o `env.py`,

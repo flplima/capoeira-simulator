@@ -40,7 +40,7 @@ from train_nets import (
     save_pt_checkpoint,
     update_norm,
 )
-from train_ppo import advantages, batch, update
+from train_ppo import advantages, asymmetry, batch, update
 
 
 # ---- Main PPO loop ----------------------------------------------------------
@@ -66,7 +66,7 @@ def main() -> None:
     parser.add_argument("--focus", default="", help="a move that gets half of the practice (a new or changed one)")
     parser.add_argument("--only", default="", help="the one move practised (a new kick learned on its own)")
     parser.add_argument("--gated", action="store_true", help="sizes grow only on success, never on the clock")
-    parser.add_argument("--mirror", action="store_true", help="also train on the left-right mirror of every batch: each move learns both legs at once")
+    parser.add_argument("--mirror", action="store_true", help="add the left-right symmetry loss: a mirrored observation gets the mirrored action, so each move learns both legs at once")
     parser.add_argument("--cache-dir", default="", help="persistent JAX XLA compilation cache directory")
     parser.add_argument("--impl", default="jax", choices=["jax", "warp"])
     args = parser.parse_args()
@@ -172,7 +172,6 @@ def main() -> None:
         next_value = jnp.squeeze(apply_mlp(params["critic"], next_o_norm), axis=-1)
         adv = advantages(b_rew, b_done, b_val, b_boot, next_value, gamma, lam)
         flat = batch(
-            params,
             norm,
             b_obs.reshape((batch_size, obs_size)),
             b_act.reshape((batch_size, act_size)),
@@ -181,7 +180,7 @@ def main() -> None:
             (adv + b_val).reshape((batch_size,)),
             mirror,
         )
-        params, opt_state, rng = update(tx, params, opt_state, rng, flat, args.epochs, num_minibatches, actor_lr, critic_lr, clip_eps)
+        params, opt_state, rng = update(tx, params, opt_state, rng, flat, mirror, args.epochs, num_minibatches, actor_lr, critic_lr, clip_eps)
 
         # Each tolerance row's mean squared error per term and how many frames it saw: the next tolerances (env_math.tighten)
         err_sum, err_count = error_sums(b_info["err"], b_info["row"], b_info["kick"])
@@ -208,6 +207,8 @@ def main() -> None:
             "kick_attempts": jnp.sum(b_info["kick_attempt"]),
             "kick_oks": jnp.sum(b_info["kick_ok"]),
         }
+        if mirror is not None:
+            metrics["sym"] = jnp.sqrt(asymmetry(params["actor"], apply_mlp(params["actor"], flat.obs), flat.obs_mirror, mirror))
         return params, opt_state, norm, env_state, rng, metrics
 
     total_steps, iteration, start = 0, 0, time.time()
@@ -340,6 +341,8 @@ def main() -> None:
             "down": round(float(m["down"]), 3),
             "up": round(float(m["up"]), 3),
         }
+        if "sym" in m:
+            stats["sym"] = round(float(m["sym"]), 4)
         stats.update(ends_stats(finished_ends))
         stats["tol"] = tolerance_stats(sigma)
 
