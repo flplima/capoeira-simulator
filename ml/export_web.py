@@ -240,10 +240,11 @@ def steady(env: GingaEnv, brain: Brain) -> bool:
     """Whether three control steps from here barely move when the pose moves by 5 µm, as float32 rounding and
     two MuJoCo builds move it. A contact right at its edge is chaotic: from a foot 10 µm into the floor, 5 µm
     in the pose moved the kicking leg 1.5 mm three steps later in Python itself, and the browser can't match
-    that to 0.1 mm — so the fixture moves on a step from such a state."""
+    that to 0.1 mm — so the fixture moves on a step from such a state. Whether a nudge finds the edge depends on
+    its direction: a knee landing on the floor passed three of them and moved 4.9 mm on the fourth."""
     rng = np.random.default_rng(0)
     ends = []
-    for noise in (0.0, 5e-6, 5e-6, 5e-6):
+    for noise in (0.0,) + (5e-6,) * 12:
         e, b = copy.deepcopy((env, brain))
         e.d.qpos[:] += rng.uniform(-noise, noise, e.d.qpos.shape)
         mujoco.mj_forward(e.m, e.d)
