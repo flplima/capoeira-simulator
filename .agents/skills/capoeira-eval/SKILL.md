@@ -57,6 +57,7 @@ Every new setup (changed reward, reference, environment or skill) gets a
 uv run modal run --detach modal_train.py --no-wait --skill <ginga|kicks|esquiva|recover> \
   --out runs/<out> --init runs/<checkpoint>.pt --minutes 15 --steps 100e6 [--lr 5e-5] [--log-std -2.3] \
   [--gpu A100-40GB --envs 4096]   # another GPU than the L4, with the environments its memory takes
+  [--mirror]                      # kicks and esquiva: also learn from the left-right mirror of every batch, both legs at once
 
 # Local fallback (CPU/GPU on this Mac)
 mkdir -p runs/<out>

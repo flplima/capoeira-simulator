@@ -23,6 +23,7 @@ import optax
 
 from env_consts import FALL_SPEEDS, SIGMA_INIT, SIGMA_ROWS, SIGMA_WARMUP, TERMS
 from env_math import tighten
+from env_mirror import mirror_maps
 from env_mjx import MjxGingaEnv
 from mjx_eval import report
 from mjx_math import error_sums
@@ -39,6 +40,7 @@ from train_nets import (
     save_pt_checkpoint,
     update_norm,
 )
+from train_ppo import advantages, batch, update
 
 
 # ---- Main PPO loop ----------------------------------------------------------
@@ -64,6 +66,7 @@ def main() -> None:
     parser.add_argument("--focus", default="", help="a move that gets half of the practice (a new or changed one)")
     parser.add_argument("--only", default="", help="the one move practised (a new kick learned on its own)")
     parser.add_argument("--gated", action="store_true", help="sizes grow only on success, never on the clock")
+    parser.add_argument("--mirror", action="store_true", help="also train on the left-right mirror of every batch: each move learns both legs at once")
     parser.add_argument("--cache-dir", default="", help="persistent JAX XLA compilation cache directory")
     parser.add_argument("--impl", default="jax", choices=["jax", "warp"])
     args = parser.parse_args()
@@ -83,6 +86,7 @@ def main() -> None:
 
     env = MjxGingaEnv(skill=args.skill, max_seconds=40.0, impl=args.impl, focus=args.focus, only=args.only)
     obs_size, act_size = env.obs_size, env.act_size
+    mirror = mirror_maps(env.m) if args.mirror else None
 
     rng = jax.random.PRNGKey(0)
     rng, k_init, k_envs = jax.random.split(rng, 3)
@@ -124,7 +128,6 @@ def main() -> None:
     gamma, lam, clip_eps = 0.95, 0.95, 0.2
     batch_size = horizon * num_envs
     num_minibatches = min(args.minibatches, batch_size)
-    minibatch_size = batch_size // num_minibatches
 
     @jax.jit
     def train_iteration(
@@ -156,7 +159,8 @@ def main() -> None:
             final_val = jnp.squeeze(apply_mlp(params["critic"], final_o_norm), axis=-1)
             boot = jnp.where(trunc & (~term), final_val, 0.0)
 
-            transition = (o_norm, action, logp, rew, done.astype(jnp.float32), val, boot, info)
+            # The observation is kept raw: the update normalises it (and its mirror) with the rollout's final statistics
+            transition = (st.obs, action, logp, rew, done.astype(jnp.float32), val, boot, info)
             return (next_st, nrm, key), transition
 
         (env_state, norm, rng), traj = jax.lax.scan(
@@ -166,71 +170,18 @@ def main() -> None:
 
         next_o_norm = apply_norm(norm, env_state.obs)
         next_value = jnp.squeeze(apply_mlp(params["critic"], next_o_norm), axis=-1)
-
-        def gae_step(carry, t_inputs):
-            last_gae, following = carry
-            rew_t, done_t, val_t, boot_t = t_inputs
-            nonterminal = 1.0 - done_t
-            delta = rew_t + gamma * (following * nonterminal + boot_t) - val_t
-            gae = delta + gamma * lam * nonterminal * last_gae
-            return (gae, val_t), gae
-
-        _, advantages = jax.lax.scan(
-            gae_step,
-            (jnp.zeros(num_envs, jnp.float32), next_value),
-            (b_rew, b_done, b_val, b_boot),
-            reverse=True,
+        adv = advantages(b_rew, b_done, b_val, b_boot, next_value, gamma, lam)
+        flat = batch(
+            params,
+            norm,
+            b_obs.reshape((batch_size, obs_size)),
+            b_act.reshape((batch_size, act_size)),
+            b_logp.reshape((batch_size,)),
+            adv.reshape((batch_size,)),
+            (adv + b_val).reshape((batch_size,)),
+            mirror,
         )
-        returns = advantages + b_val
-
-        flat_obs = b_obs.reshape((batch_size, obs_size))
-        flat_act = b_act.reshape((batch_size, act_size))
-        flat_logp = b_logp.reshape((batch_size,))
-        flat_adv = advantages.reshape((batch_size,))
-        flat_ret = returns.reshape((batch_size,))
-        flat_adv = (flat_adv - jnp.mean(flat_adv)) / (jnp.std(flat_adv) + 1e-8)
-
-        def epoch_step(carry, _):
-            p, ost, key = carry
-            key, k_perm = jax.random.split(key)
-            perm = jax.random.permutation(k_perm, batch_size)[: num_minibatches * minibatch_size]
-            perm = perm.reshape((num_minibatches, minibatch_size))
-
-            def mb_step(p_ost, idx):
-                p_cur, ost_cur = p_ost
-                mb_o = flat_obs[idx]
-                mb_a = flat_act[idx]
-                mb_lp = flat_logp[idx]
-                mb_adv = flat_adv[idx]
-                mb_ret = flat_ret[idx]
-
-                def loss_fn(prms):
-                    mean = apply_mlp(prms["actor"], mb_o)
-                    logp = gaussian_log_prob(mean, prms["log_std"], mb_a)
-                    ratio = jnp.exp(logp - mb_lp)
-                    p_loss = -jnp.mean(
-                        jnp.minimum(ratio * mb_adv, jnp.clip(ratio, 1.0 - clip_eps, 1.0 + clip_eps) * mb_adv)
-                    )
-                    val = jnp.squeeze(apply_mlp(prms["critic"], mb_o), axis=-1)
-                    v_loss = jnp.mean((val - mb_ret) ** 2)
-                    return p_loss + 0.5 * v_loss
-
-                grads = jax.grad(loss_fn)(p_cur)
-                updates, ost_next = tx.update(grads, ost_cur, p_cur)
-                scaled_updates = {
-                    "actor": jax.tree.map(lambda u: u * actor_lr, updates["actor"]),
-                    "critic": jax.tree.map(lambda u: u * critic_lr, updates["critic"]),
-                    "log_std": updates["log_std"] * actor_lr,
-                }
-                p_next = optax.apply_updates(p_cur, scaled_updates)
-                return (p_next, ost_next), None
-
-            (p, ost), _ = jax.lax.scan(mb_step, (p, ost), perm)
-            return (p, ost, key), None
-
-        (params, opt_state, rng), _ = jax.lax.scan(
-            epoch_step, (params, opt_state, rng), None, length=args.epochs
-        )
+        params, opt_state, rng = update(tx, params, opt_state, rng, flat, args.epochs, num_minibatches, actor_lr, critic_lr, clip_eps)
 
         # Each tolerance row's mean squared error per term and how many frames it saw: the next tolerances (env_math.tighten)
         err_sum, err_count = error_sums(b_info["err"], b_info["row"], b_info["kick"])

@@ -56,8 +56,10 @@ image = (
     .add_local_file(HERE / "mjx_reset.py", "/workspace/mjx_reset.py")
     .add_local_file(HERE / "mjx_step.py", "/workspace/mjx_step.py")
     .add_local_file(HERE / "env_mjx.py", "/workspace/env_mjx.py")
+    .add_local_file(HERE / "env_mirror.py", "/workspace/env_mirror.py")
     .add_local_file(HERE / "mjx_eval.py", "/workspace/mjx_eval.py")
     .add_local_file(HERE / "train_nets.py", "/workspace/train_nets.py")
+    .add_local_file(HERE / "train_ppo.py", "/workspace/train_ppo.py")
     .add_local_file(HERE / "train_log.py", "/workspace/train_log.py")
     .add_local_file(HERE / "train_mjx.py", "/workspace/train_mjx.py")
     .add_local_dir(HERE / "data", "/workspace/data")
@@ -85,6 +87,7 @@ def remote_train(
     focus: str,
     only: str,
     gated: bool,
+    mirror: bool,
     init_bytes: bytes | None,
 ) -> dict[str, bytes]:
     import os
@@ -132,8 +135,7 @@ def remote_train(
         "--out",
         str(out_dir),
     ]
-    if gated:
-        cmd.append("--gated")
+    cmd += [flag for flag, on in (("--gated", gated), ("--mirror", mirror)) if on]
     if init_bytes is not None:
         init_path = Path("/tmp/init.pt")
         init_path.write_bytes(init_bytes)
@@ -178,6 +180,7 @@ def main(
     focus: str = "",
     only: str = "",
     gated: bool = False,
+    mirror: bool = False,
     gpu: str = "L4",
     wait: bool = True,
 ) -> None:
@@ -207,6 +210,7 @@ def main(
         focus=focus,
         only=only,
         gated=gated,
+        mirror=mirror,
         init_bytes=init_bytes,
     )
     train = remote_train.with_options(gpu=gpu)
