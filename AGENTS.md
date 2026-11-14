@@ -74,11 +74,11 @@ A broken `main` stops everyone. If CI turns red on `main`, land a fix, revert th
 
 ## Git
 
-When working on a branch other than `main`, always `git merge main` before starting work to avoid future conflicts.
+Every change goes on its own branch, in its own worktree (`.claude/worktrees/<slug>`), and opens a pull request stacked on top of the open ones with `gh stack` (related or not), so the owner reviews and merges the whole stack at once. In a stack the base is the PR below: keep it current with `gh stack sync`, not `git merge main`. A PR stays a draft until CI is green. Never commit or push to `main`, and never merge.
 
 **Stage files explicitly — never `git add -A`.** `ml/runs`, `ml/data` and `ml/models` sit next to tracked code; a sweeping add is how private data would get committed.
 
-**Nothing is committed or pushed without asking the user.**
+**Commit and push only your own branch; the PR is how the user reviews it.** Ask before anything else that leaves the machine: a training run on Modal, a deploy.
 
 Use [gitmoji](https://gitmoji.dev/) for commit messages:
 
