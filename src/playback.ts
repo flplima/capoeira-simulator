@@ -36,13 +36,6 @@ export class Playback {
     return this.live ? this.live.mode : this.failure ? "failed" : "loading";
   }
 
-  /** Whether a shove can be given now; null when the simulation doesn't know how to fall. */
-  get canShove(): boolean | null {
-    if (!this.live?.canRecover) return null;
-    const mode = this.live.mode;
-    return mode === "ginga" || mode === "waiting" || mode === "kick";
-  }
-
   /** For useSyncExternalStore: called when the simulation starts, stops, or changes mode. */
   subscribe = (listener: () => void) => {
     this.listeners.add(listener);

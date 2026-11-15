@@ -8,7 +8,7 @@ import { Vector3 } from "three";
 import { TOPICS } from "../src/machine";
 import { loadTexts, textIn } from "../src/data/text";
 import { dict, setLang } from "../src/i18n/lang";
-import { MANEUVERS, MOVES } from "../src/sim/types";
+import { OFFERED } from "../src/offered";
 import { TOQUES } from "../src/music/toques";
 
 const library = await loadLibrary((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), "utf8"));
@@ -34,7 +34,7 @@ const LIMITS: Record<string, [number, number]> = {
 };
 const limitFor = (key: string) => LIMITS[key.replace(/_[lr]\./, "_*.")];
 
-const texts = await loadTexts((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), "utf8"), [...TOPICS]);
+const texts = await loadTexts((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), "utf8"), TOPICS);
 
 describe("movement library", () => {
   it("loads every movement without errors", () => {
@@ -112,11 +112,13 @@ describe("texts in both languages", () => {
     });
   }
 
-  it("has a hint for every move, maneuver and toque in both languages", () => {
+  it("has a hint for every offered move and maneuver and every toque in both languages", () => {
     for (const lang of ["en", "pt"] as const) {
       setLang(lang);
-      for (const move of MOVES) expect(dict().moveHints[move], `${lang} ${move}`).toBeTruthy();
-      for (const maneuver of MANEUVERS) expect(dict().maneuverHints[maneuver], `${lang} ${maneuver}`).toBeTruthy();
+      for (const o of OFFERED) {
+        const hint = o.kind === "move" ? dict().moveHints[o.id] : dict().maneuverHints[o.id];
+        expect(hint, `${lang} ${o.id}`).toBeTruthy();
+      }
       for (const toque of TOQUES) expect(dict().toqueDescriptions[toque.id], `${lang} ${toque.id}`).toBeTruthy();
     }
     setLang("en");

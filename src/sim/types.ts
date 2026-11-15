@@ -91,13 +91,10 @@ export const MOVE_NETWORK: Record<Move, "kicks" | "esquiva"> = {
   "esquiva-baixa": "esquiva",
   cocorinha: "esquiva",
 };
-export type Maneuver = "troca-de-base" | "giro-de-base" | "role" | "passagem-de-negativa";
-export const MANEUVERS: Maneuver[] = ["troca-de-base", "giro-de-base", "role", "passagem-de-negativa"];
+export type Maneuver = "giro-de-base";
+export const MANEUVERS: Maneuver[] = ["giro-de-base"];
 export const MANEUVER_NAMES: Record<Maneuver, string> = {
-  "troca-de-base": "Troca de base",
   "giro-de-base": "Giro de base",
-  role: "Rolê",
-  "passagem-de-negativa": "Passagem de negativa",
 };
 export type Side = "r" | "l";
 /** Where a fall lands (ml/floor.py). */

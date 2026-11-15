@@ -1,5 +1,5 @@
 import type * as ToneLib from "tone";
-import { BEATS_PER_BAR, TOQUES, type Stroke, type Toque } from "./toques";
+import { BEATS_PER_BAR, DEFAULT_TOQUE, type Stroke, type Toque } from "./toques";
 
 // A synthesized berimbau (no samples) playing a toque in a loop, with a soft
 // caxixi on the eighth notes. Tone.js is loaded on first use so the app's
@@ -23,8 +23,8 @@ class Berimbau {
   private voice: { pluck: ToneLib.PluckSynth; gourd: ToneLib.Filter; buzz: ToneLib.NoiseSynth; rattle: ToneLib.MetalSynth; caxixi: ToneLib.NoiseSynth } | null = null;
   private part: ToneLib.Part | null = null;
   private shaker: ToneLib.Loop | null = null;
-  private toque: Toque = TOQUES[0];
-  private bpm = TOQUES[0].bpm;
+  private toque: Toque = DEFAULT_TOQUE;
+  private bpm = DEFAULT_TOQUE.bpm;
   private wanted = false;
 
   /**

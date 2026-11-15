@@ -4,14 +4,14 @@ import { CapoeiraContext } from "./context";
 import type { capoeiraMachine } from "./machine";
 import { Playback } from "./playback";
 import { Stage } from "./components/Stage";
-import { Controls, MOVE_TOPICS } from "./components/Controls";
+import { Controls } from "./components/Controls";
 import { Timeline } from "./components/Timeline";
 import { Info } from "./components/Info";
 import { LanguageSwitch } from "./components/LanguageSwitch";
 import { t, useLang } from "./i18n/lang";
 import { berimbau } from "./music/berimbau";
 import { useBerimbau } from "./music/useBerimbau";
-import type { Move } from "./sim/types";
+import { ask, OFFERED, offeredForKey } from "./offered";
 
 /** Phones and small tablets; keep in step with the compact media query in styles.css. */
 const COMPACT_LAYOUT = "(max-width: 900px), (max-height: 520px)";
@@ -25,44 +25,19 @@ const KEYS: Record<string, EventFromLogic<typeof capoeiraMachine>> = {
   "+": { type: "FASTER" },
 };
 
-/** Number keys ask for the moves, in the order of the move buttons. */
-const MOVE_KEYS: Record<string, Move> = {
-  "1": "martelo",
-  "2": "bencao",
-  "3": "meia-lua-de-frente",
-  "4": "queixada",
-  "5": "ponteira",
-  "6": "joelhada",
-  "7": "meia-lua-de-compasso",
-  "8": "esquiva",
-  "9": "esquiva-baixa",
-  "0": "cocorinha",
-};
-
 function useKeyboard(playback: Playback) {
   const actor = CapoeiraContext.useActorRef();
   useEffect(() => {
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.metaKey || e.ctrlKey || e.altKey) return;
       const playing = actor.getSnapshot().matches("playing");
-      const move = MOVE_KEYS[e.key];
-      if (move && playback.liveMode === "ginga" && playing) {
-        if (playback.sim?.request(move)) actor.send({ type: "SHOW", topic: MOVE_TOPICS[move] });
+      // Number keys ask for what the app offers, in the order of the buttons.
+      const offered = offeredForKey(e.key);
+      if (offered && playback.liveMode === "ginga" && playing) {
+        if (playback.sim && ask(playback.sim, offered)) actor.send({ type: "SHOW", topic: offered.topic });
         return;
       }
       const lower = e.key.toLowerCase();
-      if (lower === "e" && playback.canShove && playing) {
-        playback.sim?.shove();
-        return;
-      }
-      if (lower === "f" && playback.liveMode === "ginga" && playing) {
-        playback.sim?.feintGinga();
-        return;
-      }
-      if (lower === "g") {
-        playback.sim?.toggleFeintMode();
-        return;
-      }
       if (lower === "o") {
         playback.sim?.toggleOrbit();
         return;
@@ -156,8 +131,8 @@ function Shell() {
         <Timeline playback={playback} />
         <Controls playback={playback} />
         <p className="keys">
-          <kbd>{t("keySpace")}</kbd> {t("keyPlay")} · <kbd>1</kbd>–<kbd>0</kbd> {t("keyMoves")} · <kbd>WASD</kbd>/<kbd>Q</kbd><kbd>R</kbd> {t("keyWalk")} ·{" "}
-          <kbd>F</kbd> {t("keyBreak")} · <kbd>G</kbd> {t("keyThreat")} · <kbd>O</kbd> {t("keyOrbit")} · <kbd>E</kbd> {t("keyShove")} · <kbd>M</kbd> {t("keyBerimbau")}
+          <kbd>{t("keySpace")}</kbd> {t("keyPlay")} · <kbd>1</kbd>–<kbd>{OFFERED.length}</kbd> {t("keyMoves")} · <kbd>WASD</kbd>/<kbd>Q</kbd><kbd>R</kbd> {t("keyWalk")} ·{" "}
+          <kbd>O</kbd> {t("keyOrbit")} · <kbd>M</kbd> {t("keyBerimbau")}
         </p>
       </div>
     </div>

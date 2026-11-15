@@ -35,6 +35,8 @@ sources:
     url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques
   - title: The 8 Training Sequences of Mestre Bimba — Papoeira
     url: https://papoeira.com/en/the-8-training-sequences-of-mestre-bimba/
+  - title: "Martelo: Capoeira movimento + slow motion (Capoeira Nantes, the video the trained martelo is fitted to)"
+    url: https://www.youtube.com/watch?v=ZCLVQIfaPHE
 loop: false
 keyframes:
   - t: 0

@@ -109,7 +109,6 @@ export function beginRecover(g: LiveGinga) {
   g.move = null;
   g.pending = null;
   g.maneuver = null;
-  g.pendingFeintGinga = false;
   g.recover = { move, side, t: 0, onset: Array.from(q), place, sink: v[1] };
   g.notify();
 }
