@@ -6,11 +6,10 @@ import {
   MANEUVERS,
   MOVE_NAMES,
   MOVES,
-  type GingaStyle,
   type Move,
 } from "../sim/types";
 import { SPEEDS, type Topic } from "../machine";
-import { decimal, dict, t, useLang, type StringKey } from "../i18n/lang";
+import { decimal, dict, t, useLang } from "../i18n/lang";
 import { berimbau } from "../music/berimbau";
 import { MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";
 
@@ -39,13 +38,6 @@ const MODE_LABELS = {
   ginga: "modeGinga",
 } as const;
 
-const STYLE_LABELS: Record<GingaStyle, StringKey> = {
-  auto: "styleAuto",
-  angola: "styleAngola",
-  padrao: "stylePadrao",
-  regional: "styleRegional",
-};
-
 export function Controls({ playback }: { playback: Playback }) {
   useLang();
   const actor = CapoeiraContext.useActorRef();
@@ -55,7 +47,6 @@ export function Controls({ playback }: { playback: Playback }) {
   const feintGinga = useSyncExternalStore(playback.subscribe, () => playback.sim?.pendingFeintGinga ?? false);
   const feintMode = useSyncExternalStore(playback.subscribe, () => playback.sim?.feintMode ?? false);
   const orbit = useSyncExternalStore(playback.subscribe, () => playback.sim?.nav.orbit ?? false);
-  const gingaStyle = useSyncExternalStore(playback.subscribe, () => playback.sim?.gingaStyle ?? "auto");
   // A move can be asked for while the body is gingando; the buttons wait for it to come back to the ginga.
   const ready = live === "ginga" && playing;
   const music = CapoeiraContext.useSelector((s) => s.context.music);
@@ -175,20 +166,6 @@ export function Controls({ playback }: { playback: Playback }) {
         >
           {t("orbit")}
         </button>
-        <label className="select style-select" title={t("gingaStyleTitle")}>
-          <span className="sr-only">{t("gingaStyle")}</span>
-          <select
-            aria-label={t("gingaStyle")}
-            value={gingaStyle}
-            onChange={(e) => playback.sim?.setGingaStyle(e.target.value as GingaStyle)}
-          >
-            {(Object.keys(STYLE_LABELS) as GingaStyle[]).map((style) => (
-              <option key={style} value={style}>
-                {t(STYLE_LABELS[style])}
-              </option>
-            ))}
-          </select>
-        </label>
         <button
           className="music-toggle"
           aria-pressed={music}

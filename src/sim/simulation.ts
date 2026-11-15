@@ -12,7 +12,7 @@ import { statusOf } from "./status";
 import { available, availableManeuver, request, requestManeuver } from "./requests";
 import { wrap } from "./math";
 import { MOVE_NETWORK } from "./types";
-import type { GingaStyle, Landing, LiveFiles, Maneuver, Move, Placement, Side } from "./types";
+import type { Landing, LiveFiles, Maneuver, Move, Placement, Side } from "./types";
 
 // The ginga, live: the trained policy from ml/ drives a MuJoCo simulation of
 // the body right here in the browser. MuJoCo itself runs as WebAssembly (the
@@ -59,8 +59,6 @@ export class LiveGinga {
   pendingFeintGinga = false;
   /** Modo ameaça (finta de golpe): kicks blend to 45% and retract smoothly to the ginga base. */
   feintMode = false;
-  /** Ginga posture style: auto follows tempo (Angola <= 76 bpm, Regional >= 104 bpm), or explicit override. */
-  gingaStyle: GingaStyle = "auto";
   /** Falling and getting up (Choreography.recover): landing, side, time since balance was lost, the pose
    * it was lost in, and where the landing is placed. */
   /** sink: the hips' vertical speed when balance was lost (m/s, up positive). */
@@ -316,12 +314,6 @@ export class LiveGinga {
     this.feintMode = !this.feintMode;
     this.notify();
     return this.feintMode;
-  }
-
-  /** Set the ginga posture style (auto, angola, padrao, regional). */
-  setGingaStyle(style: GingaStyle) {
-    this.gingaStyle = style;
-    this.notify();
   }
 
   braced = false;
