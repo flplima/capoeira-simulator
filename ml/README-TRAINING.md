@@ -40,7 +40,7 @@ Continuação do [pipeline](README.md#pipeline): a recompensa, o treino, o naveg
   simulações em paralelo) numa GPU (L4 por padrão; `--gpu` troca, com
   `--envs` à altura da memória), e os checkpoints ficam no volume
   `capoeira-mjx-runs` até `modal_train.py::fetch` trazê-los para `runs/`.
-  No próprio Mac, o `train_mjx.py` roda na CPU (64 simulações) e o `train.py`
+  Localmente, o `train_mjx.py` roda na CPU (64 simulações) e o `train.py`
   é o PPO original em PyTorch (12 simulações na CPU); os três gravam o mesmo
   formato de `.pt`.
   `--init` parte de um checkpoint anterior (entradas novas começam com peso
