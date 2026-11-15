@@ -1,29 +1,14 @@
 import { assign, emit, fromPromise, setup } from "xstate";
 import { fetchText } from "./data/load";
 import { loadTexts, type MovementText } from "./data/text";
-import { MAX_BPM, MIN_BPM, TOQUES } from "./music/toques";
+import { OFFERED, type Offered } from "./offered";
+import { DEFAULT_TOQUE, MAX_BPM, MIN_BPM, TOQUES } from "./music/toques";
 
 export const SPEEDS = [0.25, 0.5, 0.75, 1, 1.25] as const;
 
-/** The trained movements, in the order of the info tabs; each names public/data/movements/<id>.yaml. */
-export const TOPICS = [
-  "ginga",
-  "martelo",
-  "bencao",
-  "meia-lua-de-frente",
-  "queixada",
-  "ponteira",
-  "joelhada",
-  "meia-lua-de-compasso",
-  "esquiva-lateral",
-  "esquiva-baixa",
-  "cocorinha",
-  "troca-de-base",
-  "giro-de-base",
-  "role",
-  "passagem-de-negativa",
-] as const;
-export type Topic = (typeof TOPICS)[number];
+/** The info tabs: the ginga and what the app offers (src/offered.ts); each names public/data/movements/<id>.yaml. */
+export type Topic = "ginga" | Offered["topic"];
+export const TOPICS: Topic[] = ["ginga", ...OFFERED.map((o) => o.topic)];
 
 interface Context {
   /** How to do each trained movement, for the info panel. */
@@ -65,7 +50,7 @@ export const capoeiraMachine = setup({
   },
   actors: {
     // The texts are a nicety: the simulation runs without them.
-    loadTexts: fromPromise(() => loadTexts(fetchText, [...TOPICS]).catch(() => ({}))),
+    loadTexts: fromPromise(() => loadTexts(fetchText, TOPICS).catch(() => ({}))),
   },
 }).createMachine({
   id: "capoeira",
@@ -73,8 +58,8 @@ export const capoeiraMachine = setup({
     texts: {},
     topic: "ginga",
     speed: 1,
-    toque: TOQUES[0].id,
-    bpm: TOQUES[0].bpm,
+    toque: DEFAULT_TOQUE.id,
+    bpm: DEFAULT_TOQUE.bpm,
     music: false,
   },
   invoke: {

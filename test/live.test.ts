@@ -3,6 +3,8 @@ import { describe, expect, it } from "vitest";
 import load from "@mujoco/mujoco";
 import { LiveGinga } from "../src/sim/simulation";
 import type { LiveFiles, Move } from "../src/sim/types";
+import { ask, OFFERED } from "../src/offered";
+import { DEFAULT_TOQUE } from "../src/music/toques";
 
 // The browser runs the policy itself, so its port of the observation and of
 // the network has to match ml/ exactly. The fixture (written by
@@ -103,7 +105,7 @@ describe("live ginga", () => {
     let cleared = 0;
     let was = false;
     for (let i = 0; i < 4000; i++) {
-      // Hard shoves from turning directions, so some get-ups fail.
+      // Hard pushes from turning directions, so some get-ups fail.
       if (i % 130 === 0) ginga.push(500 * Math.cos(i * 2.399), 500 * Math.sin(i * 2.399));
       ginga.update(0.03, 90, null);
       if (ginga.fallen && !was) falls++;
@@ -132,35 +134,45 @@ describe("live ginga", () => {
     console.log(`fallen in ${falls} of 300 control steps`);
   });
 
-  it("performs navigation, feints, and standing/floor maneuvers without falling", async () => {
+  it("walks and turns while gingando without falling", async () => {
     const ginga = await live();
     ginga.bpm = 90;
     ginga.reset(0);
-
-    // 1. Navigation & Orbit
     ginga.setNav({ forward: 1, turn: 1 });
     for (let i = 0; i < 60; i++) ginga.update(0.03, 90, null);
     expect(Math.hypot(ginga.placement[0], ginga.placement[1])).toBeGreaterThan(0.05);
     expect(Math.abs(ginga.placement[2])).toBeGreaterThan(0.1);
     expect(ginga.fallen).toBe(false);
-    ginga.setNav({ forward: 0, turn: 0 });
-
-    // 2. Feint Ginga (quebra na paralela) & Feint Mode (modo ameaça)
-    expect(ginga.feintGinga()).toBe(true);
-    for (let i = 0; i < 60 && ginga.pendingFeintGinga; i++) ginga.update(0.03, 90, null);
-    expect(ginga.pendingFeintGinga).toBe(false);
-    expect(ginga.toggleFeintMode()).toBe(true);
-    expect(ginga.toggleFeintMode()).toBe(false);
-
-    // 3. Standing & Floor Maneuvers
-    for (const m of ["troca-de-base", "giro-de-base", "role", "passagem-de-negativa"] as const) {
-      ginga.reset(0);
-      const req = ginga.requestManeuver(m);
-      expect(req).not.toBeNull();
-      for (let i = 0; i < 200 && ginga.busy; i++) ginga.update(0.03, 90, null);
-      expect(ginga.busy).toBe(false);
-      expect(ginga.fallen).toBe(false);
-    }
     ginga.dispose();
   }, 60_000);
+
+  it("ends every offered move and maneuver back in the ginga, standing", async () => {
+    for (const offered of OFFERED) {
+      const ginga = await live();
+      const bpm = DEFAULT_TOQUE.bpm;
+      for (let i = 0; i < 100; i++) ginga.update(ginga.controlDt, bpm, null);
+      expect(ask(ginga, offered), offered.id).not.toBeNull();
+      let down = false;
+      for (let i = 0; i < 400 && ginga.busy; i++) {
+        ginga.update(ginga.controlDt, bpm, null);
+        down ||= ginga.fallen || ginga.recover !== null;
+      }
+      expect(ginga.mode, offered.id).toBe("ginga");
+      expect(down, `${offered.id} fell`).toBe(false);
+      ginga.dispose();
+    }
+  }, 60_000);
+
+  it("starts at the toque's tempo, then glides to a new one", async () => {
+    const ginga = await live();
+    ginga.update(ginga.controlDt, 90, null);
+    expect(ginga.bpm).toBe(90);
+    for (let i = 0; i < 10; i++) {
+      const before = ginga.bpm;
+      ginga.update(ginga.controlDt, 120, null);
+      expect(ginga.bpm).toBeGreaterThan(before);
+      expect(ginga.bpm - before).toBeLessThanOrEqual(6 * ginga.controlDt + 1e-9);
+    }
+    ginga.dispose();
+  });
 });

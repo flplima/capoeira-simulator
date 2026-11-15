@@ -1,33 +1,14 @@
 import { useSyncExternalStore } from "react";
 import { CapoeiraContext } from "../context";
 import type { Playback } from "../playback";
-import {
-  MANEUVER_NAMES,
-  MANEUVERS,
-  MOVE_NAMES,
-  MOVES,
-  type Move,
-} from "../sim/types";
-import { SPEEDS, type Topic } from "../machine";
+import { MANEUVER_NAMES, MOVE_NAMES } from "../sim/types";
+import { ask, OFFERED, type Offered } from "../offered";
+import { SPEEDS } from "../machine";
 import { decimal, dict, t, useLang } from "../i18n/lang";
 import { berimbau } from "../music/berimbau";
-import { MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";
+import { DEFAULT_TOQUE, MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";
 
 const BPM_STEP = 2;
-
-/** The info panel's entry for each move. */
-export const MOVE_TOPICS: Record<Move, Topic> = {
-  martelo: "martelo",
-  bencao: "bencao",
-  "meia-lua-de-frente": "meia-lua-de-frente",
-  queixada: "queixada",
-  ponteira: "ponteira",
-  joelhada: "joelhada",
-  "meia-lua-de-compasso": "meia-lua-de-compasso",
-  esquiva: "esquiva-lateral",
-  "esquiva-baixa": "esquiva-baixa",
-  cocorinha: "cocorinha",
-};
 
 const MODE_LABELS = {
   loading: "modeLoading",
@@ -38,21 +19,39 @@ const MODE_LABELS = {
   ginga: "modeGinga",
 } as const;
 
+/** The button of one offered move or maneuver; `number` is its number key. */
+function OfferButton({ playback, offered, ready, number }: { playback: Playback; offered: Offered; ready: boolean; number: number }) {
+  const send = CapoeiraContext.useActorRef().send;
+  const move = offered.kind === "move";
+  const name = move ? MOVE_NAMES[offered.id] : MANEUVER_NAMES[offered.id];
+  const hint = move ? dict().moveHints[offered.id] : dict().maneuverHints[offered.id];
+  return (
+    <button
+      disabled={!ready || (move && !playback.sim?.available(offered.id))}
+      onClick={() => {
+        if (playback.sim) ask(playback.sim, offered);
+        send({ type: "SHOW", topic: offered.topic });
+      }}
+      title={t(move ? "moveTitle" : "maneuverTitle", { name, hint, key: number })}
+    >
+      {name}
+    </button>
+  );
+}
+
 export function Controls({ playback }: { playback: Playback }) {
   useLang();
   const actor = CapoeiraContext.useActorRef();
   const speed = CapoeiraContext.useSelector((s) => s.context.speed);
   const playing = CapoeiraContext.useSelector((s) => s.matches("playing"));
   const live = useSyncExternalStore(playback.subscribe, () => playback.liveMode);
-  const feintGinga = useSyncExternalStore(playback.subscribe, () => playback.sim?.pendingFeintGinga ?? false);
-  const feintMode = useSyncExternalStore(playback.subscribe, () => playback.sim?.feintMode ?? false);
   const orbit = useSyncExternalStore(playback.subscribe, () => playback.sim?.nav.orbit ?? false);
   // A move can be asked for while the body is gingando; the buttons wait for it to come back to the ginga.
   const ready = live === "ginga" && playing;
   const music = CapoeiraContext.useSelector((s) => s.context.music);
   const toqueId = CapoeiraContext.useSelector((s) => s.context.toque);
   const bpm = CapoeiraContext.useSelector((s) => s.context.bpm);
-  const toque = TOQUES.find((q) => q.id === toqueId) ?? TOQUES[0];
+  const toque = TOQUES.find((q) => q.id === toqueId) ?? DEFAULT_TOQUE;
   const send = actor.send;
 
   return (
@@ -76,64 +75,12 @@ export function Controls({ playback }: { playback: Playback }) {
 
       <div className="moves" role="group" aria-label={t("movesGroup")}>
         <span className="moves-label">{t(MODE_LABELS[live])}</span>
-        {MOVES.map((move, i) => (
-          <button
-            key={move}
-            disabled={!ready || !playback.sim?.available(move)}
-            onClick={() => {
-              playback.sim?.request(move);
-              send({ type: "SHOW", topic: MOVE_TOPICS[move] });
-            }}
-            title={t("moveTitle", { name: MOVE_NAMES[move], hint: dict().moveHints[move], key: (i + 1) % 10 })}
-          >
-            {MOVE_NAMES[move]}
-          </button>
-        ))}
-        {playback.canShove !== null && (
-          <button
-            className="shove"
-            disabled={!playing || !playback.canShove}
-            onClick={() => playback.sim?.shove()}
-            title={t("shoveTitle")}
-          >
-            {t("shove")}
-          </button>
-        )}
+        {OFFERED.map((offered, i) => offered.kind === "move" && <OfferButton key={offered.id} {...{ playback, offered, ready, number: i + 1 }} />)}
       </div>
 
       <div className="moves variations" role="group" aria-label={t("variationsGroup")}>
         <span className="moves-label">{t("variationsLabel")}</span>
-        {MANEUVERS.map((maneuver) => (
-          <button
-            key={maneuver}
-            disabled={!ready || !playback.sim?.availableManeuver(maneuver)}
-            onClick={() => {
-              playback.sim?.requestManeuver(maneuver);
-              send({ type: "SHOW", topic: maneuver });
-            }}
-            title={t("maneuverTitle", { name: MANEUVER_NAMES[maneuver], hint: dict().maneuverHints[maneuver] })}
-          >
-            {MANEUVER_NAMES[maneuver]}
-          </button>
-        ))}
-        <button
-          className="toggle-pill"
-          aria-pressed={feintGinga}
-          disabled={!ready}
-          onClick={() => playback.sim?.feintGinga()}
-          title={t("gingaBreakTitle")}
-        >
-          {t("gingaBreak")}
-        </button>
-        <button
-          className="toggle-pill"
-          aria-pressed={feintMode}
-          disabled={!playback.sim}
-          onClick={() => playback.sim?.toggleFeintMode()}
-          title={t("threatModeTitle")}
-        >
-          {t("threatMode")}
-        </button>
+        {OFFERED.map((offered, i) => offered.kind === "maneuver" && <OfferButton key={offered.id} {...{ playback, offered, ready, number: i + 1 }} />)}
       </div>
 
       <div className="music" role="group" aria-label={t("navigationGroup")}>

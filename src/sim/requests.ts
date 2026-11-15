@@ -12,37 +12,11 @@ export function available(g: LiveGinga, move: Move) {
   return (MOVE_NETWORK[move] === "kicks" || !!g.files.policy.networks.esquiva) && !!clip(g, move, "r");
 }
 
-/** Whether a standing or floor displacement maneuver can be asked for. */
-export function availableManeuver(g: LiveGinga, maneuver: Maneuver) {
-  if (maneuver === "role") return g.available("cocorinha");
-  if (maneuver === "passagem-de-negativa") return g.available("esquiva-baixa");
-  return true;
-}
-
-/** Request a standing or floor displacement maneuver (troca-de-base, giro-de-base, role, passagem-de-negativa). */
+/** Request a standing maneuver (giro-de-base). */
 export function requestManeuver(g: LiveGinga, type: Maneuver) {
-  if (g.busy || !g.availableManeuver(type)) return null;
+  if (g.busy) return null;
   const side: Side = wrap(g.phase) < 0.5 ? "r" : "l";
-  if (type === "troca-de-base") {
-    g.maneuver = { type, t: 0, duration: 1.35, side, startYaw: g.placement[2] };
-    g.notify();
-    return g.maneuver;
-  }
-  if (type === "giro-de-base") {
-    g.maneuver = { type, t: 0, duration: 1.6, side, startYaw: g.placement[2] };
-    g.notify();
-    return g.maneuver;
-  }
-  const baseMove: Move = type === "role" ? "cocorinha" : "esquiva-baixa";
-  const pending = g.request(baseMove);
-  if (!pending) return null;
-  g.maneuver = {
-    type,
-    t: 0,
-    duration: clip(g, baseMove, pending.side).duration,
-    side: pending.side,
-    startYaw: g.placement[2],
-  };
+  g.maneuver = { type, t: 0, duration: 1.6, side, startYaw: g.placement[2] };
   g.notify();
   return g.maneuver;
 }

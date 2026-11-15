@@ -16,15 +16,16 @@ export interface Toque {
 }
 
 export const BEATS_PER_BAR = 4;
-/** Tempo range the ginga policy was trained on. */
-export const MIN_BPM = 60;
-export const MAX_BPM = 130;
+/** Tempo range a visitor can set. The ginga falls below 70 bpm (13 falls in 300 s at 66, 31 at 60) and from
+ * 70 to 112 it does not, so the lowest toque and the range start there; 120 is the fastest toque. */
+export const MIN_BPM = 70;
+export const MAX_BPM = 120;
 
 export const TOQUES: Toque[] = [
   {
     id: "angola",
     name: "Angola",
-    bpm: 66,
+    bpm: 72,
     // tch-tch DONG ding (pausa)
     pattern: [
       { beat: 0, stroke: "chiado" },
@@ -59,6 +60,9 @@ export const TOQUES: Toque[] = [
     ],
   },
 ];
+
+/** The toque the app opens on. */
+export const DEFAULT_TOQUE = TOQUES[1];
 
 /** Seconds per full ginga cycle at a tempo. */
 export const cyclePeriod = (bpm: number) => (BEATS_PER_BAR * 60) / bpm;

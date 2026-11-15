@@ -3,7 +3,7 @@ import { textIn } from "../data/text";
 import { t, useLang } from "../i18n/lang";
 import { TOPICS } from "../machine";
 
-/** How to do the trained movements: one tab each; asking for a move opens its tab. */
+/** How to do the ginga and what the app offers: one tab each; asking for a move opens its tab. */
 export function Info() {
   const texts = CapoeiraContext.useSelector((s) => s.context.texts);
   const topic = CapoeiraContext.useSelector((s) => s.context.topic);

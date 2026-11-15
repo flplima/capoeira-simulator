@@ -1,8 +1,7 @@
-import { cyclePeriod } from "../music/toques";
 import { floorClip, land, recoverTarget } from "./floor";
 import { nlerp, placePose, placeXZ, smoothstep, unplaceXZ, wrap } from "./math";
 import { feetAt, sampleReference } from "./reference";
-import { MOVE_NETWORK, type Move, type Placement, type Side } from "./types";
+import type { Move, Placement, Side } from "./types";
 import type { LiveGinga } from "./simulation";
 
 /** Furthest (m) a kick follows its support foot away from the corner (env.ANCHOR_LIMIT). */
@@ -14,8 +13,7 @@ export function clip(g: LiveGinga, move: Move, side: Side) {
 
 export function blend(g: LiveGinga, t: number) {
   const { blendIn, blendOut } = g.files.reference.kicks;
-  const scale = g.feintMode && g.move && MOVE_NETWORK[g.move] === "kicks" ? 0.45 : 1;
-  return scale * smoothstep(t / blendIn) * smoothstep((clip(g, g.move!, g.side).duration - t) / blendOut);
+  return smoothstep(t / blendIn) * smoothstep((clip(g, g.move!, g.side).duration - t) / blendOut);
 }
 
 /** Reference pose and feet targets `ahead` seconds from now, in the world (Choreography.target). */
@@ -143,61 +141,25 @@ export function advanceChoreography(g: LiveGinga, dt: number) {
   }
   if (g.move) {
     g.kickT += dt;
-    if (g.maneuver?.type === "role" && g.kickT >= 0.25 && g.kickT <= 1.55) {
-      const w = 1 - Math.cos((2 * Math.PI * (g.kickT - 0.25)) / 1.3);
-      const dir = g.side === "r" ? 1 : -1;
-      const [px, pz] = supportFootXZ(g, g.side === "r" ? 0 : 1);
-      rotateAroundPivot(g, dir * ((1.5 * Math.PI) / 1.3) * w * dt, px, pz);
-      const yaw = g.placement[2];
-      g.placement = [
-        g.placement[0] + Math.cos(yaw) * dir * 0.22 * w * dt,
-        g.placement[1] - Math.sin(yaw) * dir * 0.22 * w * dt,
-        yaw,
-      ];
-    } else if (g.maneuver?.type === "passagem-de-negativa" && g.kickT >= 0.3 && g.kickT <= 1.35) {
-      const w = 1 - Math.cos((2 * Math.PI * (g.kickT - 0.3)) / 1.05);
-      const dir = g.side === "r" ? -1 : 1;
-      const [px, pz] = supportFootXZ(g, g.side === "r" ? 0 : 1);
-      rotateAroundPivot(g, dir * ((0.5 * Math.PI) / 1.05) * w * dt, px, pz);
-      const yaw = g.placement[2];
-      g.placement = [
-        g.placement[0] + Math.sin(yaw) * 0.14 * w * dt,
-        g.placement[1] + Math.cos(yaw) * 0.14 * w * dt,
-        yaw,
-      ];
-    }
     if (g.kickT >= clip(g, g.move, g.side).duration) {
-      if (g.maneuver?.type === "passagem-de-negativa") g.phase = wrap(g.phase + 0.5);
       g.placement = reanchor(g);
       g.move = null;
-      g.maneuver = null;
       g.notify();
     }
     return;
   }
-  if (g.maneuver && !g.pending) {
+  if (g.maneuver) {
     const m = g.maneuver;
     m.t += dt;
-    if (m.type === "troca-de-base") {
-      const w = 0.5 * (1 - Math.cos((2 * Math.PI * m.t) / m.duration));
-      const effPeriod = cyclePeriod(Math.min(130, g.bpm + 38 * w));
-      const next = g.phase + dt / effPeriod;
-      if (next >= 1) g.cycles++;
-      g.phase = wrap(next);
-      const base = reanchor(g);
-      const yaw = base[2];
-      g.placement = [base[0] + Math.sin(yaw) * 0.035 * w, base[1] + Math.cos(yaw) * 0.035 * w, yaw];
-    } else if (m.type === "giro-de-base") {
-      const w = 1 - Math.cos((2 * Math.PI * m.t) / m.duration);
-      const dir = m.side === "r" ? 1 : -1;
-      const [px, pz] = supportFootXZ(g);
-      rotateAroundPivot(g, dir * ((2 * Math.PI) / m.duration) * w * dt, px, pz);
-      const next = g.phase + dt / g.period;
-      if (next >= 1) g.cycles++;
-      g.phase = wrap(next);
-      const base = reanchor(g);
-      g.placement = [base[0], base[1], g.placement[2]];
-    }
+    const w = 1 - Math.cos((2 * Math.PI * m.t) / m.duration);
+    const dir = m.side === "r" ? 1 : -1;
+    const [px, pz] = supportFootXZ(g);
+    rotateAroundPivot(g, dir * ((2 * Math.PI) / m.duration) * w * dt, px, pz);
+    const next = g.phase + dt / g.period;
+    if (next >= 1) g.cycles++;
+    g.phase = wrap(next);
+    const base = reanchor(g);
+    g.placement = [base[0], base[1], g.placement[2]];
     if (m.t >= m.duration) {
       g.placement = reanchor(g);
       g.maneuver = null;
@@ -213,12 +175,6 @@ export function advanceChoreography(g: LiveGinga, dt: number) {
     g.kickT = 0;
     g.pending = null;
     g.anchor = supportAnchor(g);
-    g.notify();
-    return;
-  }
-  if (g.pendingFeintGinga && Math.abs((g.phase % 0.5) - 0.25) <= Math.max(step * 2, 0.025)) {
-    g.phase = wrap(1 - g.phase);
-    g.pendingFeintGinga = false;
     g.notify();
     return;
   }

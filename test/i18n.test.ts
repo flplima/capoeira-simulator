@@ -43,7 +43,6 @@ const ginga = (over: Partial<Record<string, unknown>>) =>
     cycles: 2,
     bpm: 66,
     side: "r",
-    feintMode: false,
     move: null,
     maneuver: null,
     pending: null,
@@ -80,10 +79,6 @@ describe("status line", () => {
   it("names the kick in flight and which way an esquiva goes", () => {
     expect(lines(ginga({ move: "bencao", side: "r" }))).toEqual({ en: "Bênção · right leg", pt: "Bênção · perna direita" });
     expect(lines(ginga({ move: "esquiva", side: "r" }))).toEqual({ en: "Esquiva lateral · to the left", pt: "Esquiva lateral · para a esquerda" });
-    expect(lines(ginga({ move: "martelo", feintMode: true }))).toEqual({
-      en: "Martelo feint · right leg",
-      pt: "Finta de Martelo · perna direita",
-    });
   });
 
   it("follows a fall, the get-up and a restart", () => {
@@ -93,12 +88,12 @@ describe("status line", () => {
       pt: "levantando · da queda de quatro",
     });
     expect(lines(ginga({ fallen: true }))).toEqual({
-      en: "real-time physics · fell — restarting",
-      pt: "física em tempo real · caiu — recomeçando",
+      en: "real-time physics · fell, restarting",
+      pt: "física em tempo real · caiu, recomeçando",
     });
   });
 
   it("names a maneuver in Portuguese", () => {
-    expect(lines(ginga({ maneuver: { type: "role" } })).en).toBe("Rolê");
+    expect(lines(ginga({ maneuver: { type: "giro-de-base" } })).en).toBe("Giro de base");
   });
 });

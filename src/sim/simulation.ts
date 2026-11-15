@@ -9,7 +9,7 @@ import { observe } from "./observation";
 import { activeNetwork, decide } from "./policy";
 import { poseRig } from "./pose";
 import { statusOf } from "./status";
-import { available, availableManeuver, request, requestManeuver } from "./requests";
+import { available, request, requestManeuver } from "./requests";
 import { wrap } from "./math";
 import { MOVE_NETWORK } from "./types";
 import type { Landing, LiveFiles, Maneuver, Move, Placement, Side } from "./types";
@@ -28,6 +28,9 @@ import type { Landing, LiveFiles, Maneuver, Move, Placement, Side } from "./type
 //
 // The observation and the network are ports of ml/env.py and ml/train.py;
 // test/live.test.ts checks them against values computed in Python.
+
+/** How fast the body's tempo follows a new toque (bpm per second): a jump of the tempo under the feet topples it. */
+const TEMPO_GLIDE = 6;
 
 export class LiveGinga {
   readonly model: MjModel;
@@ -50,20 +53,16 @@ export class LiveGinga {
   pending: { move: Move; side: Side; entry: number } | null = null;
   /** Where the ginga's triangle is (Choreography.frame): it moves to where the body gets up. */
   placement: Placement = [0, 0, 0];
-  /** Active standing or floor displacement maneuver (troca-de-base, giro-de-base, role, passagem-de-negativa). */
+  /** The standing maneuver under way (giro-de-base). */
   maneuver: { type: Maneuver; t: number; duration: number; side: Side; startYaw: number } | null = null;
   /** Continuous navigation controls (-1..1) and circular roda orbit toggle. */
   nav = { forward: 0, side: 0, turn: 0, orbit: false };
   nudgeInput = { forward: 0, side: 0, turn: 0, timer: 0 };
-  /** Quebra na paralela (finta de ginga) waiting for the next parallel pass (phase ≈ 0.25 or 0.75). */
-  pendingFeintGinga = false;
-  /** Modo ameaça (finta de golpe): kicks blend to 45% and retract smoothly to the ginga base. */
-  feintMode = false;
   /** Falling and getting up (Choreography.recover): landing, side, time since balance was lost, the pose
    * it was lost in, and where the landing is placed. */
   /** sink: the hips' vertical speed when balance was lost (m/s, up positive). */
   recover: { move: Landing; side: Side; t: number; onset: number[]; place: Placement; sink: number } | null = null;
-  /** A shove in progress: horizontal force on the chest (N) and control steps left. */
+  /** A push in progress: horizontal force on the chest (N) and control steps left. */
   pushForce: [number, number] = [0, 0];
   pushLeft = 0;
   listeners = new Set<() => void>();
@@ -177,7 +176,6 @@ export class LiveGinga {
     this.pending = null;
     this.recover = null;
     this.maneuver = null;
-    this.pendingFeintGinga = false;
     this.nudgeInput.timer = 0;
     this.placement = [0, 0, 0];
     this.pushLeft = 0;
@@ -231,7 +229,6 @@ export class LiveGinga {
     this.placement = [...placement];
     this.recover = recover && { ...recover, onset: [...recover.onset], place: [...recover.place] };
     this.maneuver = null;
-    this.pendingFeintGinga = false;
     this.nudgeInput.timer = 0;
     (this.data.qpos as Float64Array).set(qpos);
     (this.data.qvel as Float64Array).set(qvel);
@@ -249,7 +246,7 @@ export class LiveGinga {
 
   /** Gingando, waiting for the moment to kick, kicking, or down (falling and getting up). */
   get mode(): "ginga" | "waiting" | "kick" | "down" {
-    return this.recover ? "down" : this.move || (this.maneuver && !this.pending) ? "kick" : this.pending ? "waiting" : "ginga";
+    return this.recover ? "down" : this.move || this.maneuver ? "kick" : this.pending ? "waiting" : "ginga";
   }
 
   get busy() {
@@ -261,16 +258,10 @@ export class LiveGinga {
     return !!(this.files.policy.networks.recover && this.files.reference.floor);
   }
 
-  /** Shove the chest for 0.2 s with a horizontal force (N, world x/z), like a partner would (GingaEnv.push). */
+  /** Push the chest for 0.2 s with a horizontal force (N, world x/z), like a partner would (GingaEnv.push). */
   push(fx: number, fz: number) {
     this.pushForce = [fx, fz];
     this.pushLeft = Math.round(0.2 / this.controlDt);
-  }
-
-  /** A shove of `force` newtons from a random direction. */
-  shove(force = 350) {
-    const angle = (Math.random() * 2 - 1) * Math.PI;
-    this.push(force * Math.cos(angle), force * Math.sin(angle));
   }
 
   /** Called whenever the mode changes (React subscribes to enable and disable the move buttons). */
@@ -299,21 +290,6 @@ export class LiveGinga {
   toggleOrbit() {
     this.nav.orbit = !this.nav.orbit;
     this.notify();
-  }
-
-  /** Schedule a quebra na paralela (finta de ginga) at the next parallel stance pass. */
-  feintGinga() {
-    if (this.busy) return false;
-    this.pendingFeintGinga = !this.pendingFeintGinga;
-    this.notify();
-    return this.pendingFeintGinga;
-  }
-
-  /** Toggle modo ameaça (kicks chamber to 45% blend and retract to the ginga). */
-  toggleFeintMode() {
-    this.feintMode = !this.feintMode;
-    this.notify();
-    return this.feintMode;
   }
 
   braced = false;
@@ -360,10 +336,17 @@ export class LiveGinga {
 
   wasRecovering = false;
 
+  /** Whether `update` has set the tempo once yet. */
+  private tempoSet = false;
+
   /** Advance real time (scaled by speed), running as many control steps as fit. */
   update(dt: number, bpm: number, barPhase: number | null) {
-    this.bpm = Math.min(Math.max(bpm, this.files.policy.minBpm), this.files.policy.maxBpm);
     if (!this.playing) return;
+    const wanted = Math.min(Math.max(bpm, this.files.policy.minBpm), this.files.policy.maxBpm);
+    // The body starts at the wanted tempo; after that a new toque is followed gradually.
+    const glide = this.tempoSet ? TEMPO_GLIDE * dt * this.speed : Infinity;
+    this.tempoSet = true;
+    this.bpm += Math.min(Math.max(wanted - this.bpm, -glide), glide);
     this.accumulated = Math.min(this.accumulated + dt * this.speed, 0.25);
     while (this.accumulated >= this.controlDt) {
       this.accumulated -= this.controlDt;
@@ -400,10 +383,6 @@ export class LiveGinga {
 
   available(move: Move) {
     return available(this, move);
-  }
-
-  availableManeuver(maneuver: Maneuver) {
-    return availableManeuver(this, maneuver);
   }
 
   requestManeuver(type: Maneuver) {
