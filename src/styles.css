@@ -67,11 +67,36 @@ select {
   touch-action: none;
 }
 
-.info-toggle {
+.stage-actions {
   position: absolute;
   top: 12px;
   right: 12px;
   z-index: 3;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+.lang-switch {
+  background: var(--panel);
+  backdrop-filter: blur(10px);
+  border-radius: 999px;
+}
+.lang-switch button {
+  display: flex;
+  align-items: center;
+  min-height: 36px;
+  padding: 0 10px;
+}
+.lang-switch button:first-child {
+  border-radius: 999px 0 0 999px;
+}
+.lang-switch button:last-child {
+  border-radius: 0 999px 999px 0;
+}
+.lang-switch button[aria-pressed="false"] svg {
+  opacity: 0.55;
+}
+.info-toggle {
   min-height: 36px;
   padding: 0 14px;
   background: var(--panel);
@@ -480,6 +505,10 @@ kbd {
 
 /* Phones and small tablets: the stage on top, the dock below; the info panel opens over the dock. */
 @media (max-width: 900px), (max-height: 520px) {
+  .brand {
+    top: 62px;
+    right: 12px;
+  }
   .app {
     grid-template-columns: minmax(0, 1fr);
     grid-template-rows: 50dvh minmax(0, 1fr);
@@ -504,6 +533,7 @@ kbd {
   .controls button,
   .select select,
   .info-toggle,
+  .lang-switch button,
   .tabs button {
     min-height: 44px;
   }

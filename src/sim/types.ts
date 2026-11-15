@@ -103,8 +103,6 @@ export const MANEUVER_NAMES: Record<Maneuver, string> = {
 export type Side = "r" | "l";
 /** Where a fall lands (ml/floor.py). */
 export type Landing = "quatro" | "negativa" | "joelhos";
-export const LANDING_NAMES: Record<Landing, string> = { quatro: "queda de quatro", negativa: "negativa", joelhos: "mãos e joelhos" };
-export const FROM_LANDING: Record<Landing, string> = { quatro: "da queda de quatro", negativa: "da negativa", joelhos: "das mãos e joelhos" };
 
 export interface KickClip {
   duration: number;

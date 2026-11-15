@@ -35,6 +35,14 @@ const floorPoint = z.tuple([z.number(), z.number()]);
 
 export const CATEGORIES = ["fundamento", "esquiva", "movimentação", "ataque circular", "ataque direto", "ataque de proximidade", "desequilibrante"] as const;
 
+const EnglishTextSchema = z.strictObject({
+  translation: z.string(),
+  category: z.string(),
+  summary: z.string(),
+  steps: z.array(z.string()).min(1),
+  tips: z.array(z.string()).default([]),
+});
+
 /** What a movement file says about the movement, for people: the app's info panel shows it. */
 const textShape = {
   id: z.string().regex(/^[a-z0-9-]+$/),
@@ -45,6 +53,8 @@ const textShape = {
   summary: z.string(),
   steps: z.array(z.string()).min(1),
   tips: z.array(z.string()).default([]),
+  /** The English version of the texts above; the names (name, aka) stay Portuguese. */
+  en: EnglishTextSchema.optional(),
   sources: z.array(z.strictObject({ title: z.string(), url: z.url() })).min(1),
 };
 export const MovementTextSchema = z.object(textShape);

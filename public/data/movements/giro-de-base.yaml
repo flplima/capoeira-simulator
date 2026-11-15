@@ -15,6 +15,18 @@ steps:
 tips:
   - A cabeça é a última a sair e a primeira a chegar — busque o olhar do parceiro cedo no giro.
   - Mantenha o centro de gravidade baixo; girar com as pernas retas tira o equilíbrio.
+en:
+  translation: "turning step to reposition"
+  category: "dodge"
+  summary: "A full standing turn on the axis of the base that repositions the capoeirista in the roda without releasing a kick: it serves as a feint before armadas and meias-luas, or to escape an attack by leaving behind your partner's movement."
+  steps:
+    - "From the base with the right foot back, shift your weight to the left front leg and start rotating the torso."
+    - "Turn on the ball of the foot, keeping the knees slightly bent and the guard high, protecting the face."
+    - "Pass through 180° looking over your shoulder so you do not lose sight of your partner."
+    - "Complete the 360°, setting the right foot back in the ginga base again."
+  tips:
+    - "The head is the last to leave and the first to arrive: find your partner's eyes early in the turn."
+    - "Keep your center of gravity low; turning with straight legs throws you off balance."
 sources:
   - title: List of capoeira techniques — Wikipedia
     url: https://en.wikipedia.org/wiki/List_of_capoeira_techniques

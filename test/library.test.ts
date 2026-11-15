@@ -5,6 +5,11 @@ import { loadLibrary } from "../src/data/load";
 import { sampleClip } from "../src/anim/interp";
 import { applyPose, buildRig, type BoneName } from "../src/rig/rig";
 import { Vector3 } from "three";
+import { TOPICS } from "../src/machine";
+import { loadTexts, textIn } from "../src/data/text";
+import { dict, setLang } from "../src/i18n/lang";
+import { MANEUVERS, MOVES } from "../src/sim/types";
+import { TOQUES } from "../src/music/toques";
 
 const library = await loadLibrary((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), "utf8"));
 
@@ -28,6 +33,8 @@ const LIMITS: Record<string, [number, number]> = {
   "head.twist": [-80, 80],
 };
 const limitFor = (key: string) => LIMITS[key.replace(/_[lr]\./, "_*.")];
+
+const texts = await loadTexts((path) => readFile(new URL(`../public/data/${path}`, import.meta.url), "utf8"), [...TOPICS]);
 
 describe("movement library", () => {
   it("loads every movement without errors", () => {
@@ -81,6 +88,38 @@ describe("movement library", () => {
     const right = library.clips.ginga.frames[1];
     const left = library.clips.ginga.frames[3];
     expect(Array.from(mirrorPose(right), (v) => v + 0)).toEqual(Array.from(left, (v) => v + 0));
+  });
+});
+
+describe("texts in both languages", () => {
+  for (const id of TOPICS) {
+    it(`${id}: reads in English and in Portuguese`, () => {
+      const movement = texts[id]!;
+      const en = textIn(movement, "en");
+      const pt = textIn(movement, "pt");
+      for (const text of [en, pt]) {
+        expect(text.translation.length).toBeGreaterThan(0);
+        expect(text.summary.length).toBeGreaterThan(40);
+        expect(text.steps.length).toBeGreaterThan(0);
+        expect(text.tips.length).toBeGreaterThan(0);
+      }
+      expect(en.steps).toHaveLength(pt.steps.length);
+      expect(en.tips).toHaveLength(pt.tips.length);
+      expect(en.summary).not.toBe(pt.summary);
+      expect(en.category).not.toBe(pt.category);
+      expect(en.name).toBe(pt.name);
+      expect(en.aka).toEqual(pt.aka);
+    });
+  }
+
+  it("has a hint for every move, maneuver and toque in both languages", () => {
+    for (const lang of ["en", "pt"] as const) {
+      setLang(lang);
+      for (const move of MOVES) expect(dict().moveHints[move], `${lang} ${move}`).toBeTruthy();
+      for (const maneuver of MANEUVERS) expect(dict().maneuverHints[maneuver], `${lang} ${maneuver}`).toBeTruthy();
+      for (const toque of TOQUES) expect(dict().toqueDescriptions[toque.id], `${lang} ${toque.id}`).toBeTruthy();
+    }
+    setLang("en");
   });
 });
 

@@ -7,6 +7,8 @@ import { Stage } from "./components/Stage";
 import { Controls, MOVE_TOPICS } from "./components/Controls";
 import { Timeline } from "./components/Timeline";
 import { Info } from "./components/Info";
+import { LanguageSwitch } from "./components/LanguageSwitch";
+import { t, useLang } from "./i18n/lang";
 import { berimbau } from "./music/berimbau";
 import { useBerimbau } from "./music/useBerimbau";
 import type { Move } from "./sim/types";
@@ -121,8 +123,12 @@ function Shell() {
   const error = useSyncExternalStore(playback.subscribe, () => playback.error);
   // The info panel starts open beside the stage on a laptop, closed on a phone where it covers the controls.
   const [infoOpen, setInfoOpen] = useState(() => !window.matchMedia(COMPACT_LAYOUT).matches);
+  const lang = useLang();
   useKeyboard(playback);
   useBerimbau();
+  useEffect(() => {
+    document.title = t("title");
+  }, [lang]);
 
   return (
     <div className={`app ${infoOpen ? "info-open" : "info-closed"}`}>
@@ -130,14 +136,17 @@ function Shell() {
         <Stage playback={playback} />
         <header className="brand">
           <span className="mark" aria-hidden />
-          Capoeira <span className="muted">· física real, treinada por aprendizado de máquina</span>
+          Capoeira <span className="muted">· {t("brandSubtitle")}</span>
         </header>
-        <button className="info-toggle" aria-expanded={infoOpen} aria-label={infoOpen ? "Fechar o painel de informações" : "Abrir o painel de informações"} onClick={() => setInfoOpen(!infoOpen)}>
-          {infoOpen ? "Fechar" : "Sobre o golpe"}
-        </button>
+        <div className="stage-actions">
+          <LanguageSwitch />
+          <button className="info-toggle" aria-expanded={infoOpen} aria-label={t(infoOpen ? "infoCloseLabel" : "infoOpenLabel")} onClick={() => setInfoOpen(!infoOpen)}>
+            {t(infoOpen ? "infoClose" : "infoOpen")}
+          </button>
+        </div>
         {error && (
           <div className="notice error">
-            <p>A física em tempo real não carregou.</p>
+            <p>{t("physicsFailed")}</p>
             <pre>{error}</pre>
           </div>
         )}
@@ -147,8 +156,8 @@ function Shell() {
         <Timeline playback={playback} />
         <Controls playback={playback} />
         <p className="keys">
-          <kbd>espaço</kbd> tocar · <kbd>1</kbd>–<kbd>0</kbd> golpes · <kbd>WASD</kbd>/<kbd>Q</kbd><kbd>R</kbd> andar/girar ·{" "}
-          <kbd>F</kbd> quebra · <kbd>G</kbd> ameaça · <kbd>O</kbd> orbitar · <kbd>E</kbd> empurrão · <kbd>M</kbd> berimbau
+          <kbd>{t("keySpace")}</kbd> {t("keyPlay")} · <kbd>1</kbd>–<kbd>0</kbd> {t("keyMoves")} · <kbd>WASD</kbd>/<kbd>Q</kbd><kbd>R</kbd> {t("keyWalk")} ·{" "}
+          <kbd>F</kbd> {t("keyBreak")} · <kbd>G</kbd> {t("keyThreat")} · <kbd>O</kbd> {t("keyOrbit")} · <kbd>E</kbd> {t("keyShove")} · <kbd>M</kbd> {t("keyBerimbau")}
         </p>
       </div>
     </div>
