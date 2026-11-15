@@ -10,6 +10,7 @@ import { Vector3 } from "three";
 import { CH, mirrorPose, type Pose } from "../data/channels";
 import { fetchText, loadLibrary } from "../data/load";
 import { sampleClip } from "../anim/interp";
+import { dict, t } from "../i18n/lang";
 import { applyPose, buildRig } from "../rig/rig";
 
 const SPACING = 1.9;
@@ -54,7 +55,7 @@ function Row({ name, poses }: { name: string; poses: Pose[] }) {
   const height = name === "top" ? 2.2 : 2.3;
   return (
     <div className="row">
-      <div className="view">{name}</div>
+      <div className="view">{(dict().sheetViews as Record<string, string>)[name] ?? name}</div>
       <div style={{ height: `calc(${height / width} * min(100vw - 40px, 1800px))` }}>
         <Canvas orthographic flat dpr={1}>
           <color attach="background" args={["#e9e6df"]} />
@@ -89,7 +90,7 @@ async function main() {
   });
   const views = (params.get("views") ?? "front,side,3/4").split(",");
 
-  document.title = `${id} · sheet`;
+  document.title = t("sheetTitle", { id });
   const style = document.createElement("style");
   style.textContent = `
     body { margin: 0; padding: 12px 20px; background: #e9e6df; font: 13px/1.3 ui-sans-serif, system-ui; color: #222; }

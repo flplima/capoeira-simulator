@@ -1,4 +1,5 @@
 import { useEffect, useRef } from "react";
+import { decimal, t, useLang } from "../i18n/lang";
 import type { Playback } from "../playback";
 
 /** The ginga cycle, a bar of four beats, with a playhead and the status line, updated without re-rendering React. */
@@ -7,6 +8,7 @@ export function Timeline({ playback }: { playback: Playback }) {
   const label = useRef<HTMLSpanElement>(null);
   const clock = useRef<HTMLSpanElement>(null);
   const ticks = useRef<HTMLDivElement>(null);
+  useLang();
 
   useEffect(() => {
     let frame = 0;
@@ -14,7 +16,7 @@ export function Timeline({ playback }: { playback: Playback }) {
     const tick = () => {
       const s = playback.status;
       head.current!.style.transform = `scaleX(${s.time / s.duration})`;
-      clock.current!.textContent = playback.sim ? `${s.time.toFixed(2)} / ${s.duration.toFixed(2)} s` : "";
+      clock.current!.textContent = playback.sim ? `${decimal(s.time, 2)} / ${decimal(s.duration, 2)} s` : "";
       if (label.current!.textContent !== s.label) label.current!.textContent = s.label;
       const beat = playback.sim ? Math.floor((4 * s.time) / s.duration) : -1;
       if (beat !== lastBeat) {
@@ -37,7 +39,7 @@ export function Timeline({ playback }: { playback: Playback }) {
         <div ref={head} className="progress" />
         <div ref={ticks}>
           {[0, 1, 2, 3].map((beat) => (
-            <span key={beat} className="tick" style={{ left: `${beat * 25}%` }} title={`tempo ${beat + 1} do compasso`} />
+            <span key={beat} className="tick" style={{ left: `${beat * 25}%` }} title={t("beat", { n: beat + 1 })} />
           ))}
         </div>
       </div>

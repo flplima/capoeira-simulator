@@ -40,7 +40,7 @@ function Capoeirista({ playback, rig, markers }: { playback: Playback; rig: Rig;
       })
       .catch((error) => {
         if (cancelled) return;
-        console.error("física em tempo real indisponível", error);
+        console.error("real-time physics unavailable", error);
         playback.error = String((error as Error)?.message ?? error);
       });
     return () => {

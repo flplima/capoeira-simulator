@@ -9,11 +9,9 @@
 export type Stroke = "chiado" | "dong" | "ding";
 
 export interface Toque {
-  id: string;
+  id: "angola" | "sao-bento-pequeno" | "sao-bento-grande";
   name: string;
   bpm: number;
-  /** pt-BR description of the game this toque calls for. */
-  description: string;
   pattern: { beat: number; stroke: Stroke }[];
 }
 
@@ -27,7 +25,6 @@ export const TOQUES: Toque[] = [
     id: "angola",
     name: "Angola",
     bpm: 66,
-    description: "Lento e cadenciado: ginga baixa, larga e fluida, perto do chão.",
     // tch-tch DONG ding (pausa)
     pattern: [
       { beat: 0, stroke: "chiado" },
@@ -40,7 +37,6 @@ export const TOQUES: Toque[] = [
     id: "sao-bento-pequeno",
     name: "São Bento Pequeno",
     bpm: 90,
-    description: "Angola invertido, mais rápido: jogo de dentro, ginga média.",
     // tch-tch DING dong (pausa)
     pattern: [
       { beat: 0, stroke: "chiado" },
@@ -53,7 +49,6 @@ export const TOQUES: Toque[] = [
     id: "sao-bento-grande",
     name: "São Bento Grande",
     bpm: 120,
-    description: "Rápido e de pé: ginga alta, curta e ritmada, pronta para o golpe.",
     // tch-tch DING dong dong — the pause becomes a second low note
     pattern: [
       { beat: 0, stroke: "chiado" },

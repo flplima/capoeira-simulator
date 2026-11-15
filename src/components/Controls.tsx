@@ -7,34 +7,14 @@ import {
   MOVE_NAMES,
   MOVES,
   type GingaStyle,
-  type Maneuver,
   type Move,
 } from "../sim/types";
 import { SPEEDS, type Topic } from "../machine";
+import { decimal, dict, t, useLang, type StringKey } from "../i18n/lang";
 import { berimbau } from "../music/berimbau";
 import { MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";
 
 const BPM_STEP = 2;
-
-const MOVE_HINTS: Record<Move, string> = {
-  martelo: "chute circular com o peito do pé",
-  bencao: "empurrão frontal com a sola",
-  "meia-lua-de-frente": "arco de fora para dentro com a perna estendida",
-  queixada: "arco de dentro para fora",
-  ponteira: "chute frontal rápido com a bola do pé",
-  joelhada: "golpe curto e direto com o joelho",
-  "meia-lua-de-compasso": "giro por trás apoiando as mãos no chão",
-  esquiva: "desce sobre a perna da frente, a de trás desliza para o lado",
-  "esquiva-baixa": "desce rente ao chão sobre a perna da frente",
-  cocorinha: "agachamento compacto protegendo o rosto",
-};
-
-const MANEUVER_HINTS: Record<Maneuver, string> = {
-  "troca-de-base": "passo rápido na paralela invertendo a perna de trás",
-  "giro-de-base": "giro de 360° em pé sobre o pé de apoio",
-  role: "giro baixo de 270° perto do chão deslocando pela roda",
-  "passagem-de-negativa": "descida baixa com giro de 90° e saída na base oposta",
-};
 
 /** The info panel's entry for each move. */
 export const MOVE_TOPICS: Record<Move, Topic> = {
@@ -51,15 +31,23 @@ export const MOVE_TOPICS: Record<Move, Topic> = {
 };
 
 const MODE_LABELS = {
-  loading: "carregando…",
-  failed: "indisponível",
-  waiting: "esperando o momento…",
-  kick: "em movimento…",
-  down: "no chão…",
-  ginga: "golpes",
+  loading: "modeLoading",
+  failed: "modeFailed",
+  waiting: "modeWaiting",
+  kick: "modeKick",
+  down: "modeDown",
+  ginga: "modeGinga",
 } as const;
 
+const STYLE_LABELS: Record<GingaStyle, StringKey> = {
+  auto: "styleAuto",
+  angola: "styleAngola",
+  padrao: "stylePadrao",
+  regional: "styleRegional",
+};
+
 export function Controls({ playback }: { playback: Playback }) {
+  useLang();
   const actor = CapoeiraContext.useActorRef();
   const speed = CapoeiraContext.useSelector((s) => s.context.speed);
   const playing = CapoeiraContext.useSelector((s) => s.matches("playing"));
@@ -73,30 +61,30 @@ export function Controls({ playback }: { playback: Playback }) {
   const music = CapoeiraContext.useSelector((s) => s.context.music);
   const toqueId = CapoeiraContext.useSelector((s) => s.context.toque);
   const bpm = CapoeiraContext.useSelector((s) => s.context.bpm);
-  const toque = TOQUES.find((t) => t.id === toqueId) ?? TOQUES[0];
+  const toque = TOQUES.find((q) => q.id === toqueId) ?? TOQUES[0];
   const send = actor.send;
 
   return (
     <div className="controls">
       <div className="transport">
-        <button className="play" onClick={() => send({ type: "TOGGLE_PLAY" })} aria-label={playing ? "Pausar" : "Tocar"} title="Tocar / pausar (espaço)">
+        <button className="play" onClick={() => send({ type: "TOGGLE_PLAY" })} aria-label={t(playing ? "pause" : "play")} title={t("playPauseTitle")}>
           {playing ? "❚❚" : "▶"}
         </button>
-        <button onClick={() => send({ type: "STEP" })} disabled={!playback.sim} aria-label="Um passo" title="Um passo de controle, 0,03 s (.)">
+        <button onClick={() => send({ type: "STEP" })} disabled={!playback.sim} aria-label={t("step")} title={t("stepTitle", { dt: decimal(0.03, 2) })}>
           ⏭
         </button>
       </div>
 
-      <div className="segmented" role="group" aria-label="Velocidade">
+      <div className="segmented" role="group" aria-label={t("speed")}>
         {SPEEDS.map((s) => (
           <button key={s} aria-pressed={s === speed} onClick={() => send({ type: "SET_SPEED", speed: s })}>
-            {s}×
+            {decimal(s)}×
           </button>
         ))}
       </div>
 
-      <div className="moves" role="group" aria-label="Golpes">
-        <span className="moves-label">{MODE_LABELS[live]}</span>
+      <div className="moves" role="group" aria-label={t("movesGroup")}>
+        <span className="moves-label">{t(MODE_LABELS[live])}</span>
         {MOVES.map((move, i) => (
           <button
             key={move}
@@ -105,7 +93,7 @@ export function Controls({ playback }: { playback: Playback }) {
               playback.sim?.request(move);
               send({ type: "SHOW", topic: MOVE_TOPICS[move] });
             }}
-            title={`${MOVE_NAMES[move]} — ${MOVE_HINTS[move]}; a perna e o momento são escolhidos pelo treino (${(i + 1) % 10})`}
+            title={t("moveTitle", { name: MOVE_NAMES[move], hint: dict().moveHints[move], key: (i + 1) % 10 })}
           >
             {MOVE_NAMES[move]}
           </button>
@@ -115,15 +103,15 @@ export function Controls({ playback }: { playback: Playback }) {
             className="shove"
             disabled={!playing || !playback.canShove}
             onClick={() => playback.sim?.shove()}
-            title="Empurrão — um empurrão de um lado qualquer: o corpo cai como um capoeirista — nas mãos e joelhos, na queda de quatro ou na negativa —, levanta e volta para a ginga (E)"
+            title={t("shoveTitle")}
           >
-            Empurrão
+            {t("shove")}
           </button>
         )}
       </div>
 
-      <div className="moves variations" role="group" aria-label="Variações de ginga e deslocamentos">
-        <span className="moves-label">jogo & roda</span>
+      <div className="moves variations" role="group" aria-label={t("variationsGroup")}>
+        <span className="moves-label">{t("variationsLabel")}</span>
         {MANEUVERS.map((maneuver) => (
           <button
             key={maneuver}
@@ -132,7 +120,7 @@ export function Controls({ playback }: { playback: Playback }) {
               playback.sim?.requestManeuver(maneuver);
               send({ type: "SHOW", topic: maneuver });
             }}
-            title={`${MANEUVER_NAMES[maneuver]} — ${MANEUVER_HINTS[maneuver]}`}
+            title={t("maneuverTitle", { name: MANEUVER_NAMES[maneuver], hint: dict().maneuverHints[maneuver] })}
           >
             {MANEUVER_NAMES[maneuver]}
           </button>
@@ -142,39 +130,39 @@ export function Controls({ playback }: { playback: Playback }) {
           aria-pressed={feintGinga}
           disabled={!ready}
           onClick={() => playback.sim?.feintGinga()}
-          title="Quebra de ginga — finta a passagem na paralela e retorna à mesma base (F)"
+          title={t("gingaBreakTitle")}
         >
-          Quebra de ginga
+          {t("gingaBreak")}
         </button>
         <button
           className="toggle-pill"
           aria-pressed={feintMode}
           disabled={!playback.sim}
           onClick={() => playback.sim?.toggleFeintMode()}
-          title="Modo ameaça — qualquer golpe pedido sai como finta (45% de extensão) e recolhe para a ginga (G)"
+          title={t("threatModeTitle")}
         >
-          Modo ameaça
+          {t("threatMode")}
         </button>
       </div>
 
-      <div className="music" role="group" aria-label="Navegação e Berimbau">
-        <div className="segmented nav-pad" role="group" aria-label="Navegar pela roda">
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, 1)} title="Girar à esquerda (Q)">
+      <div className="music" role="group" aria-label={t("navigationGroup")}>
+        <div className="segmented nav-pad" role="group" aria-label={t("navigateGroup")}>
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, 1)} title={t("turnLeft")}>
             ↺
           </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(1, 0, 0)} title="Avançar (W / ↑)">
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(1, 0, 0)} title={t("forward")}>
             ↑
           </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(-1, 0, 0)} title="Recuar (S / ↓)">
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(-1, 0, 0)} title={t("back")}>
             ↓
           </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, -1, 0)} title="Deslocar à esquerda (A / ←)">
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, -1, 0)} title={t("stepLeft")}>
             ←
           </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 1, 0)} title="Deslocar à direita (D / →)">
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 1, 0)} title={t("stepRight")}>
             →
           </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, -1)} title="Girar à direita (R)">
+          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, -1)} title={t("turnRight")}>
             ↻
           </button>
         </div>
@@ -183,21 +171,22 @@ export function Controls({ playback }: { playback: Playback }) {
           aria-pressed={orbit}
           disabled={!playback.sim}
           onClick={() => playback.sim?.toggleOrbit()}
-          title="Circular pela roda mantendo a frente para o centro (O)"
+          title={t("orbitTitle")}
         >
-          ◎ Orbitar roda
+          {t("orbit")}
         </button>
-        <label className="select style-select" title="Estilo postural da ginga (Angola baixa, Padrão ou Regional alta)">
-          <span className="sr-only">Estilo da ginga</span>
+        <label className="select style-select" title={t("gingaStyleTitle")}>
+          <span className="sr-only">{t("gingaStyle")}</span>
           <select
-            aria-label="Estilo da ginga"
+            aria-label={t("gingaStyle")}
             value={gingaStyle}
             onChange={(e) => playback.sim?.setGingaStyle(e.target.value as GingaStyle)}
           >
-            <option value="auto">Estilo: Auto (Toque)</option>
-            <option value="angola">Estilo: Angola (Baixa)</option>
-            <option value="padrao">Estilo: Padrão</option>
-            <option value="regional">Estilo: Regional (Alta)</option>
+            {(Object.keys(STYLE_LABELS) as GingaStyle[]).map((style) => (
+              <option key={style} value={style}>
+                {t(STYLE_LABELS[style])}
+              </option>
+            ))}
           </select>
         </label>
         <button
@@ -208,28 +197,28 @@ export function Controls({ playback }: { playback: Playback }) {
             berimbau.unlock();
             send({ type: "TOGGLE_MUSIC" });
           }}
-          title="Tocar o berimbau (M)"
+          title={t("berimbauTitle")}
         >
-          ♪ Berimbau
+          {t("berimbauToggle")}
         </button>
-        <label className="select toque" title={toque.description}>
-          <span className="sr-only">Toque</span>
+        <label className="select toque" title={dict().toqueDescriptions[toque.id]}>
+          <span className="sr-only">{t("toque")}</span>
           <select value={toque.id} onChange={(e) => send({ type: "SET_TOQUE", id: e.target.value })}>
-            {TOQUES.map((t) => (
-              <option key={t.id} value={t.id} title={t.description}>
-                {t.name} · {t.bpm} bpm
+            {TOQUES.map((q) => (
+              <option key={q.id} value={q.id} title={dict().toqueDescriptions[q.id]}>
+                {q.name} · {q.bpm} bpm
               </option>
             ))}
           </select>
         </label>
-        <div className="segmented tempo" role="group" aria-label="Andamento">
-          <button onClick={() => send({ type: "SET_BPM", bpm: bpm - BPM_STEP })} disabled={bpm <= MIN_BPM} aria-label="Mais lento" title="Mais lento">
+        <div className="segmented tempo" role="group" aria-label={t("tempoGroup")}>
+          <button onClick={() => send({ type: "SET_BPM", bpm: bpm - BPM_STEP })} disabled={bpm <= MIN_BPM} aria-label={t("slower")} title={t("slower")}>
             −
           </button>
-          <output aria-live="polite" title="Andamento (batidas por minuto)">
+          <output aria-live="polite" title={t("tempoTitle")}>
             {bpm} bpm
           </output>
-          <button onClick={() => send({ type: "SET_BPM", bpm: bpm + BPM_STEP })} disabled={bpm >= MAX_BPM} aria-label="Mais rápido" title="Mais rápido">
+          <button onClick={() => send({ type: "SET_BPM", bpm: bpm + BPM_STEP })} disabled={bpm >= MAX_BPM} aria-label={t("faster")} title={t("faster")}>
             +
           </button>
         </div>
