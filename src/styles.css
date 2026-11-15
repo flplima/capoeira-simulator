@@ -460,13 +460,6 @@ select {
   background: var(--accent);
   border-color: transparent;
 }
-.select.style-select {
-  flex: 0 1 168px;
-  min-width: 140px;
-}
-.select.style-select select {
-  font-size: 12px;
-}
 .select.toque {
   flex: 1 1 180px;
   min-width: 0;

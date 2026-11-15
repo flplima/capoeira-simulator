@@ -91,7 +91,6 @@ export const MOVE_NETWORK: Record<Move, "kicks" | "esquiva"> = {
   "esquiva-baixa": "esquiva",
   cocorinha: "esquiva",
 };
-export type GingaStyle = "auto" | "angola" | "padrao" | "regional";
 export type Maneuver = "troca-de-base" | "giro-de-base" | "role" | "passagem-de-negativa";
 export const MANEUVERS: Maneuver[] = ["troca-de-base", "giro-de-base", "role", "passagem-de-negativa"];
 export const MANEUVER_NAMES: Record<Maneuver, string> = {
