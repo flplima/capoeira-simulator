@@ -13,8 +13,8 @@ import { FloorMarkers } from "./FloorMarkers";
 import { FloorTriangle } from "./FloorTriangle";
 
 const RODA_RADIUS = 2.4;
-/** Height the camera orbits around; below the hips so the figure sits above the control dock. */
-const TARGET_Y = 0.5;
+/** Height the camera orbits around: the middle of the body, so it sits in the middle of the stage. */
+const TARGET_Y = 0.9;
 /** The trained ginga, kicks, esquiva and recovery (ml/export_web.py). */
 const SIMULATION = `${import.meta.env.BASE_URL}data/sim/ginga/`;
 
@@ -120,7 +120,7 @@ export function Stage({ playback }: { playback: Playback }) {
   const markers = useMemo(() => new Markers(rig), [rig]);
   const sim = useSyncExternalStore(playback.subscribe, () => playback.sim);
   return (
-    <Canvas camera={{ position: [2.9, 1.5, 4.6], fov: 36 }} dpr={[1, 2]}>
+    <Canvas camera={{ position: [2.2, 1.3, 3.6], fov: 36 }} dpr={[1, 2]}>
       <color attach="background" args={["#141518"]} />
       <fog attach="fog" args={["#141518", 7, 16]} />
       <hemisphereLight args={["#f3efe6", "#26262b", 1.1]} />

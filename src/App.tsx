@@ -11,6 +11,9 @@ import { berimbau } from "./music/berimbau";
 import { useBerimbau } from "./music/useBerimbau";
 import type { Move } from "./sim/types";
 
+/** Phones and small tablets; keep in step with the compact media query in styles.css. */
+const COMPACT_LAYOUT = "(max-width: 900px), (max-height: 520px)";
+
 const KEYS: Record<string, EventFromLogic<typeof capoeiraMachine>> = {
   " ": { type: "TOGGLE_PLAY" },
   ".": { type: "STEP" },
@@ -116,22 +119,29 @@ function useKeyboard(playback: Playback) {
 function Shell() {
   const [playback] = useState(() => new Playback());
   const error = useSyncExternalStore(playback.subscribe, () => playback.error);
+  // The info panel starts open beside the stage on a laptop, closed on a phone where it covers the controls.
+  const [infoOpen, setInfoOpen] = useState(() => !window.matchMedia(COMPACT_LAYOUT).matches);
   useKeyboard(playback);
   useBerimbau();
 
   return (
-    <div className="app">
-      <Stage playback={playback} />
-      <header className="brand">
-        <span className="mark" aria-hidden />
-        Capoeira <span className="muted">· física real, treinada por aprendizado de máquina</span>
-      </header>
-      {error && (
-        <div className="notice error">
-          <p>A física em tempo real não carregou.</p>
-          <pre>{error}</pre>
-        </div>
-      )}
+    <div className={`app ${infoOpen ? "info-open" : "info-closed"}`}>
+      <div className="stage">
+        <Stage playback={playback} />
+        <header className="brand">
+          <span className="mark" aria-hidden />
+          Capoeira <span className="muted">· física real, treinada por aprendizado de máquina</span>
+        </header>
+        <button className="info-toggle" aria-expanded={infoOpen} aria-label={infoOpen ? "Fechar o painel de informações" : "Abrir o painel de informações"} onClick={() => setInfoOpen(!infoOpen)}>
+          {infoOpen ? "Fechar" : "Sobre o golpe"}
+        </button>
+        {error && (
+          <div className="notice error">
+            <p>A física em tempo real não carregou.</p>
+            <pre>{error}</pre>
+          </div>
+        )}
+      </div>
       <Info />
       <div className="dock">
         <Timeline playback={playback} />
