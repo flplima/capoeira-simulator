@@ -1,14 +1,14 @@
-# Ginga com física real e aprendizado de máquina
+# Treino: da ginga do vídeo à rede no navegador
 
-Uma segunda versão da ginga, em que o corpo não segue quadros-chave: um
-boneco sólido simulado com massa, articulações, torque limitado, atrito e
-gravidade (MuJoCo) é controlado por uma rede neural treinada por reforço para
-gingar como um mestre num vídeo de referência — sem cair, pisando no
-triângulo e no andamento do berimbau. Nada é gravado: o navegador roda o
-próprio MuJoCo (WebAssembly) e a rede neural, e o corpo decide cada movimento
-em tempo real (chave **Física real (ML)**). Do meio da ginga, o corpo também
-solta dois golpes quando pedido — **martelo** e **bênção** — e volta à ginga;
-a perna e o momento de entrar no golpe também vêm do treino.
+O corpo do app não segue quadros-chave: é um boneco sólido simulado com
+massa, articulações, torque limitado, atrito e gravidade (MuJoCo), controlado
+por redes neurais treinadas por reforço para gingar como um capoeirista num
+vídeo de referência, sem cair, pisando no triângulo e no andamento do
+berimbau. Nada é gravado: o navegador roda o próprio MuJoCo (WebAssembly) e
+as redes, e o corpo decide cada movimento em tempo real. Do meio da ginga, o
+corpo também solta golpes e esquivas quando pedido e volta à ginga; a perna e
+o momento de entrar também vêm do treino. Os movimentos que o app oferece
+hoje estão no [README](../README.pt-BR.md#o-que-ele-já-faz).
 
 ## Pipeline
 
@@ -30,8 +30,8 @@ pontos 3D
    ▼
 ciclos de referência (60, 78, 96, 114 e 130 bpm; um ciclo = um compasso de 4 tempos)
    +
-golpes (kicks.py): martelo e bênção dos quadros-chave do app (ajustados às
-   duas câmeras do vídeo), cada perna, plantados no triângulo por IK
+golpes (kicks.py): os quadros-chave do app (o martelo, de um vídeo), cada
+   perna, plantados no triângulo por IK; esquivas (esquiva.py), do mesmo jeito
    +
 chão (floor.py): queda de quatro e negativa — a pose de pouso e o caminho de
    volta à base — e quedas de verdade gravadas da ginga treinada (falls.py)
@@ -115,7 +115,7 @@ uv run modal run modal_train.py::fetch --run ginga_tempo                    # tr
 uv run python kicks.py                                                      # → data/kicks.npz
 uv run modal run --detach modal_train.py --no-wait --skill all --minutes 240 --out runs/ginga_moves --init runs/ginga_tempo/last.pt --log-std -2.0
 uv run modal run modal_train.py::fetch --run ginga_moves
-# sem o Modal, no próprio Mac: uv run python train_mjx.py ... (mesmas opções) ou train.py (PPO na CPU)
+# sem o Modal, localmente: uv run python train_mjx.py ... (mesmas opções) ou train.py (PPO na CPU)
 uv run python check.py runs/ginga_moves/last.pt                              # quedas, deriva, por toque
 uv run python choose.py runs/ginga_moves/last.pt                             # → data/choices.json
 uv run python export_web.py runs/ginga_moves/last.pt ../public/data/sim/ginga  # → navegador

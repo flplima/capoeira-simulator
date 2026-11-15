@@ -168,7 +168,9 @@ Continuação do [pipeline](README.md#pipeline): os golpes, a esquiva, o cair e 
   qualquer ponto do caminho de volta (30 %, em qualquer lugar e direção do
   chão) e seguem 2 s de ginga depois de levantar. A rede de recuperação é a
   terceira rede: assume ao perder o equilíbrio e devolve 1 s depois de
-  levantar.
+  levantar. Por enquanto ela quase nunca levanta (0 de 29 quedas no teste, ver o
+  [resultado do treino](README-TRAINING.md#resultado-do-treino)), e o app põe
+  o corpo de pé de novo depois de 1,2 s.
 - **Perna e momento (choose.py).** Depois do treino, para cada golpe, cinco
   andamentos e 16 momentos do pedido dentro do ciclo, a política tenta, em
   simulação, as duas pernas e cinco momentos de entrada a partir de uma ginga
