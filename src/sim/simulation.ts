@@ -8,7 +8,6 @@ import { pace, settle } from "./balance";
 import { observe } from "./observation";
 import { activeNetwork, decide } from "./policy";
 import { poseRig } from "./pose";
-import { statusOf } from "./status";
 import { available, request, requestManeuver } from "./requests";
 import { wrap } from "./math";
 import { MOVE_NETWORK } from "./types";
@@ -371,10 +370,6 @@ export class LiveGinga {
 
   decide(obs: Float64Array, name: "ginga" | "kicks" | "recover" | "esquiva" = this.network) {
     return decide(this, obs, name);
-  }
-
-  get status() {
-    return statusOf(this);
   }
 
   apply(rig: Rig) {
