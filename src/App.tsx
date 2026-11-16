@@ -5,7 +5,6 @@ import type { capoeiraMachine } from "./machine";
 import { Playback } from "./playback";
 import { Stage } from "./components/Stage";
 import { Controls } from "./components/Controls";
-import { Timeline } from "./components/Timeline";
 import { Info } from "./components/Info";
 import { LanguageSwitch } from "./components/LanguageSwitch";
 import { t, useLang } from "./i18n/lang";
@@ -128,7 +127,6 @@ function Shell() {
       </div>
       <Info />
       <div className="dock">
-        <Timeline playback={playback} />
         <Controls playback={playback} />
         <p className="keys">
           <kbd>{t("keySpace")}</kbd> {t("keyPlay")} · <kbd>1</kbd>–<kbd>{OFFERED.length}</kbd> {t("keyMoves")} · <kbd>WASD</kbd>/<kbd>Q</kbd><kbd>R</kbd> {t("keyWalk")} ·{" "}

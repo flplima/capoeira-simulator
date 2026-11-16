@@ -1,4 +1,3 @@
-import { t } from "./i18n/lang";
 import type { LiveGinga } from "./sim/simulation";
 
 /** What the live simulation is doing, for the UI: loading, failed to load, gingando, waiting to kick, kicking, down. */
@@ -44,10 +43,5 @@ export class Playback {
 
   private emit() {
     for (const listener of this.listeners) listener();
-  }
-
-  get status() {
-    if (this.live) return this.live.status;
-    return { time: 0, duration: 1, label: t(this.failure ? "physicsUnavailable" : "physicsLoading") };
   }
 }

@@ -10,15 +10,6 @@ import { DEFAULT_TOQUE, MAX_BPM, MIN_BPM, TOQUES } from "../music/toques";
 
 const BPM_STEP = 2;
 
-const MODE_LABELS = {
-  loading: "modeLoading",
-  failed: "modeFailed",
-  waiting: "modeWaiting",
-  kick: "modeKick",
-  down: "modeDown",
-  ginga: "modeGinga",
-} as const;
-
 /** The button of one offered move or maneuver; `number` is its number key. */
 function OfferButton({ playback, offered, ready, number }: { playback: Playback; offered: Offered; ready: boolean; number: number }) {
   const send = CapoeiraContext.useActorRef().send;
@@ -45,7 +36,6 @@ export function Controls({ playback }: { playback: Playback }) {
   const speed = CapoeiraContext.useSelector((s) => s.context.speed);
   const playing = CapoeiraContext.useSelector((s) => s.matches("playing"));
   const live = useSyncExternalStore(playback.subscribe, () => playback.liveMode);
-  const orbit = useSyncExternalStore(playback.subscribe, () => playback.sim?.nav.orbit ?? false);
   // A move can be asked for while the body is gingando; the buttons wait for it to come back to the ginga.
   const ready = live === "ginga" && playing;
   const music = CapoeiraContext.useSelector((s) => s.context.music);
@@ -56,63 +46,23 @@ export function Controls({ playback }: { playback: Playback }) {
 
   return (
     <div className="controls">
-      <div className="transport">
-        <button className="play" onClick={() => send({ type: "TOGGLE_PLAY" })} aria-label={t(playing ? "pause" : "play")} title={t("playPauseTitle")}>
-          {playing ? "❚❚" : "▶"}
-        </button>
-        <button onClick={() => send({ type: "STEP" })} disabled={!playback.sim} aria-label={t("step")} title={t("stepTitle", { dt: decimal(0.03, 2) })}>
-          ⏭
-        </button>
-      </div>
-
-      <div className="segmented" role="group" aria-label={t("speed")}>
-        {SPEEDS.map((s) => (
-          <button key={s} aria-pressed={s === speed} onClick={() => send({ type: "SET_SPEED", speed: s })}>
-            {decimal(s)}×
+      <div className="player" role="group" aria-label={t("playerGroup")}>
+        <div className="transport">
+          <button className="play" onClick={() => send({ type: "TOGGLE_PLAY" })} aria-label={t(playing ? "pause" : "play")} title={t("playPauseTitle")}>
+            {playing ? "❚❚" : "▶"}
           </button>
-        ))}
-      </div>
-
-      <div className="moves" role="group" aria-label={t("movesGroup")}>
-        <span className="moves-label">{t(MODE_LABELS[live])}</span>
-        {OFFERED.map((offered, i) => offered.kind === "move" && <OfferButton key={offered.id} {...{ playback, offered, ready, number: i + 1 }} />)}
-      </div>
-
-      <div className="moves variations" role="group" aria-label={t("variationsGroup")}>
-        <span className="moves-label">{t("variationsLabel")}</span>
-        {OFFERED.map((offered, i) => offered.kind === "maneuver" && <OfferButton key={offered.id} {...{ playback, offered, ready, number: i + 1 }} />)}
-      </div>
-
-      <div className="music" role="group" aria-label={t("navigationGroup")}>
-        <div className="segmented nav-pad" role="group" aria-label={t("navigateGroup")}>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, 1)} title={t("turnLeft")}>
-            ↺
-          </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(1, 0, 0)} title={t("forward")}>
-            ↑
-          </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(-1, 0, 0)} title={t("back")}>
-            ↓
-          </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, -1, 0)} title={t("stepLeft")}>
-            ←
-          </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 1, 0)} title={t("stepRight")}>
-            →
-          </button>
-          <button disabled={!ready} onClick={() => playback.sim?.nudge(0, 0, -1)} title={t("turnRight")}>
-            ↻
+          <button onClick={() => send({ type: "STEP" })} disabled={!playback.sim} aria-label={t("step")} title={t("stepTitle", { dt: decimal(0.03, 2) })}>
+            ⏭
           </button>
         </div>
-        <button
-          className="music-toggle"
-          aria-pressed={orbit}
-          disabled={!playback.sim}
-          onClick={() => playback.sim?.toggleOrbit()}
-          title={t("orbitTitle")}
-        >
-          {t("orbit")}
-        </button>
+
+        <div className="segmented" role="group" aria-label={t("speed")}>
+          {SPEEDS.map((s) => (
+            <button key={s} aria-pressed={s === speed} onClick={() => send({ type: "SET_SPEED", speed: s })}>
+              {decimal(s)}×
+            </button>
+          ))}
+        </div>
         <button
           className="music-toggle"
           aria-pressed={music}
@@ -146,6 +96,11 @@ export function Controls({ playback }: { playback: Playback }) {
             +
           </button>
         </div>
+      </div>
+      <div className="moves" role="group" aria-label={t("movesGroup")}>
+        {OFFERED.map((offered, i) => (
+          <OfferButton key={offered.id} {...{ playback, offered, ready, number: i + 1 }} />
+        ))}
       </div>
     </div>
   );
