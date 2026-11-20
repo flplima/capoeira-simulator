@@ -372,7 +372,7 @@ select {
   color: var(--muted);
   white-space: nowrap;
 }
-.music-toggle[aria-pressed="true"] {
+.controls .music-toggle[aria-pressed="true"] {
   color: #1a1408;
   background: var(--accent);
   border-color: transparent;
