@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/dfddc6f9-33ba-4223-b176-dea17ac0d75b
 
 Sound on! The berimbau is synthesized in your browser too.
 
-Try it in your browser: **[capoeira.felipelima.xyz](https://capoeira.felipelima.xyz)**
+Try it in your browser: **[flplima.github.io/capoeira-simulator](https://flplima.github.io/capoeira-simulator/)**
 
 > [!WARNING]
 > _Early days, and entirely vibe-coded. The body still falls more than any capoeirista would._
