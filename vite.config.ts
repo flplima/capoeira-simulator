@@ -8,6 +8,10 @@ const port = Number(process.env.PORT) || 3895;
 export default defineConfig({
   plugins: [react()],
   server: { port, host: true },
+  // sheet.html is a second page (the contact sheet of a move); it needs its own entry in the build.
+  build: {
+    rollupOptions: { input: { main: "index.html", sheet: "sheet.html" } },
+  },
   // Deployed, `vite preview` serves dist/ behind the edge proxy, which arrives with the public Host
   // header. It binds only to 127.0.0.1, so accepting any Host opens nothing; it just avoids Vite's
   // host check blocking the site.

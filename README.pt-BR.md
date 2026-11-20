@@ -8,7 +8,7 @@ https://github.com/user-attachments/assets/dfddc6f9-33ba-4223-b176-dea17ac0d75b
 
 Som ligado! O berimbau também é sintetizado no seu navegador.
 
-Experimente no navegador: **[capoeira.felipelima.xyz](https://capoeira.felipelima.xyz/?lang=pt)**
+Experimente no navegador: **[flplima.github.io/capoeira-simulator](https://flplima.github.io/capoeira-simulator/?lang=pt)**
 
 > [!WARNING]
 > _Ainda no começo, e todo feito no vibe coding. O corpo ainda cai mais do que qualquer capoeirista._
