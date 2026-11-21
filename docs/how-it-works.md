@@ -81,9 +81,18 @@ SkinnedMesh + FloorMarkers      17 bones, one mesh; plumb lines and circles on t
 
 ## berimbau and tempo
 
-The berimbau is synthesized in the browser with Tone.js (a steel string over a
-gourd for the low *dong* and high *ding*, plus the caxixi), looping in the
-chosen toque:
+The berimbau is synthesized in the browser, from no recordings. When the music
+starts, the app renders a few takes of each sound and plays one at random on
+every stroke, so no two bars sound quite the same. The steel wire is struck,
+not plucked: a hard, bright hit, its overtones a little sharp because steel is
+stiff. The gourd shapes it. Pressed to the belly, it makes the third overtone
+ring out, nasal. Pulled away after the strike, it opens into a broader,
+brighter sound: the "uá". The open note, the *dong*, sits at 104 Hz and rings
+for over a second. The coin pressed on the wire gives the *ding*, 1.4
+semitones higher. Resting lightly on the wire, it gives the *chiado*, a short,
+dead buzz. The caxixi is in the stick hand, so its seeds rattle with every
+stroke, on their own on a beat without one, and softly on the back-swing in
+between. Tone.js keeps the beat and loops the chosen toque:
 
 | Toque | Tempo | Beat (one 4-beat bar) | Ginga |
 | --- | --- | --- | --- |

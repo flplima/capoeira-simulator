@@ -1,28 +1,42 @@
 import type * as ToneLib from "tone";
-import { BEATS_PER_BAR, DEFAULT_TOQUE, type Stroke, type Toque } from "./toques";
+import { renderShake } from "./caxixi";
+import { BEATS_PER_BAR, DEFAULT_TOQUE, barEvents, type BarEvent, type Shake, type Stroke, type Toque } from "./toques";
+import { renderStroke } from "./wire";
 
-// A synthesized berimbau (no samples) playing a toque in a loop, with a soft
-// caxixi on the eighth notes. Tone.js is loaded on first use so the app's
-// initial bundle stays small.
+// A synthesized berimbau (no samples) playing a toque in a loop, with its caxixi. Tone.js is
+// loaded on first use so the app's initial bundle stays small, and keeps the beat on its
+// transport.
 //
-// The voice: a plucked steel wire (Karplus–Strong) for the two notes, run
-// through a band-pass "gourd" whose centre sweeps up after each strike — the
-// wah of the cabaça leaving the belly. The chiado is a short, bright buzz: the
-// coin resting on the wire, so mostly noise with a metallic rattle.
+// Right after Tone.js loads, a few variations of each stroke (wire.ts) and of each caxixi shake
+// (caxixi.ts) are rendered into audio buffers. Each event of the bar plays one of them, picked at
+// random so repeats don't sound identical, at the exact time the transport gives. A new stroke
+// stops what the wire was still ringing, as the stick or the coin touching it would.
 
 type Tone = typeof ToneLib;
+type Sound = Stroke | Shake;
 
-/** Wire pitch (Hz) of the open note; the closed note is a whole tone above. */
-const DONG = 110;
-const DING = DONG * Math.pow(2, 2 / 12);
+/** Variations rendered of each sound. */
+const TAKES = 3;
+const STROKES: Stroke[] = ["dong", "ding", "chiado"];
+const SHAKES: Shake[] = ["strike", "swing"];
+
+interface Voice {
+  source: AudioBufferSourceNode;
+  gain: GainNode;
+  /** When it starts, in the audio context's time. */
+  at: number;
+}
 
 class Berimbau {
   private tone: Tone | null = null;
   private loading: Promise<Tone> | null = null;
   private context: AudioContext | null = null;
-  private voice: { pluck: ToneLib.PluckSynth; gourd: ToneLib.Filter; buzz: ToneLib.NoiseSynth; rattle: ToneLib.MetalSynth; caxixi: ToneLib.NoiseSynth } | null = null;
+  private sounds: Record<Sound, AudioBuffer[]> | null = null;
+  private bus: GainNode | null = null;
   private part: ToneLib.Part | null = null;
-  private shaker: ToneLib.Loop | null = null;
+  /** The wire's last stroke, which the next one stops. */
+  private ringing: Voice | null = null;
+  private voices = new Set<Voice>();
   private toque: Toque = DEFAULT_TOQUE;
   private bpm = DEFAULT_TOQUE.bpm;
   private wanted = false;
@@ -57,6 +71,9 @@ class Berimbau {
   stop() {
     this.wanted = false;
     this.tone?.getTransport().stop();
+    // Strokes already handed to the audio clock but not heard yet are taken back.
+    const now = this.context?.currentTime ?? 0;
+    for (const voice of this.voices) if (voice.at > now) voice.source.stop();
   }
 
   setToque(toque: Toque) {
@@ -94,50 +111,61 @@ class Berimbau {
   }
 
   private build(Tone: Tone) {
-    const out = new Tone.Gain(0.8).toDestination();
+    const context = this.context!;
+    // Strokes and shakes overlap: at this level their loudest sums stay below full scale.
+    const out = new Tone.Gain(0.65).toDestination();
     const room = new Tone.Reverb({ decay: 1.2, wet: 0.14 }).connect(out);
-    const body = new Tone.Filter({ type: "peaking", frequency: 240, Q: 1.2, gain: 8 }).connect(room);
-    const gourd = new Tone.Filter({ type: "bandpass", frequency: 700, Q: 2.2 }).connect(body);
-    const pluck = new Tone.PluckSynth({ attackNoise: 2.2, dampening: 5200, resonance: 0.985, volume: 4 });
-    pluck.connect(gourd);
-    // A little of the wire straight out, so it keeps its metallic edge.
-    pluck.connect(new Tone.Gain(0.25).connect(room));
+    this.bus = context.createGain();
+    Tone.connect(this.bus, room);
 
-    const buzzFilter = new Tone.Filter({ type: "bandpass", frequency: 3400, Q: 0.9 }).connect(room);
-    const buzz = new Tone.NoiseSynth({ noise: { type: "white" }, envelope: { attack: 0.001, decay: 0.045, sustain: 0, release: 0.02 }, volume: -10 });
-    buzz.connect(buzzFilter);
-    const rattle = new Tone.MetalSynth({
-      envelope: { attack: 0.001, decay: 0.07, release: 0.02 },
-      harmonicity: 3.1,
-      modulationIndex: 18,
-      resonance: 2600,
-      octaves: 1.2,
-      volume: -24,
-    });
-    rattle.frequency.value = DONG * 2;
-    rattle.connect(room);
-
-    const shakerFilter = new Tone.Filter({ type: "highpass", frequency: 5200 }).connect(out);
-    const caxixi = new Tone.NoiseSynth({ noise: { type: "pink" }, envelope: { attack: 0.006, decay: 0.07, sustain: 0, release: 0.03 }, volume: -20 });
-    caxixi.connect(shakerFilter);
-
-    this.voice = { pluck, gourd, buzz, rattle, caxixi };
+    const take = (data: Float32Array) => {
+      const buffer = context.createBuffer(1, data.length, context.sampleRate);
+      buffer.getChannelData(0).set(data);
+      return buffer;
+    };
+    const renders = [
+      ...STROKES.map((stroke) => [stroke, (seed: number) => renderStroke(stroke, context.sampleRate, seed)] as const),
+      ...SHAKES.map((shake) => [shake, (seed: number) => renderShake(shake, context.sampleRate, seed)] as const),
+    ];
+    // One take of each sound now, so the music starts at once; the other takes after, a round at a time.
+    const sounds = {} as Record<Sound, AudioBuffer[]>;
+    for (const [sound, render] of renders) sounds[sound] = [take(render(1))];
+    this.sounds = sounds;
+    const more = (seed: number) => {
+      for (const [sound, render] of renders) sounds[sound].push(take(render(seed)));
+      if (seed < TAKES) setTimeout(() => more(seed + 1));
+    };
+    setTimeout(() => more(2));
   }
 
-  private strike(stroke: Stroke, time: number) {
-    const v = this.voice!;
-    if (stroke === "chiado") {
-      v.buzz.triggerAttackRelease(0.05, time);
-      v.rattle.triggerAttackRelease(0.05, time, 0.6);
-      return;
+  private play(sound: Sound, at: number, loudness: number): Voice {
+    const context = this.context!;
+    const takes = this.sounds![sound];
+    const source = context.createBufferSource();
+    source.buffer = takes[Math.floor(Math.random() * takes.length)];
+    const gain = context.createGain();
+    // No two strokes of a player are equally loud: within about 1 dB.
+    gain.gain.value = loudness * (0.9 + 0.2 * Math.random());
+    source.connect(gain).connect(this.bus!);
+    const voice = { source, gain, at };
+    source.onended = () => {
+      gain.disconnect();
+      this.voices.delete(voice);
+    };
+    this.voices.add(voice);
+    source.start(at);
+    return voice;
+  }
+
+  private strike(event: BarEvent, time: number) {
+    if (event.stroke) {
+      if (this.ringing) {
+        this.ringing.gain.gain.setTargetAtTime(0, time, 0.01);
+        this.ringing.source.stop(time + 0.1);
+      }
+      this.ringing = this.play(event.stroke, time, event.strokeGain);
     }
-    // The gourd opens after the strike: its band sweeps up, then settles.
-    const f = v.gourd.frequency;
-    f.cancelScheduledValues(time);
-    f.setValueAtTime(stroke === "dong" ? 520 : 650, time);
-    f.exponentialRampToValueAtTime(stroke === "dong" ? 1500 : 1300, time + 0.16);
-    f.exponentialRampToValueAtTime(900, time + 0.5);
-    v.pluck.triggerAttack(stroke === "dong" ? DONG : DING, time);
+    this.play(event.shake, time, event.shakeGain);
   }
 
   /** (Re)builds the loop for the current toque, aligned to the transport's bars. */
@@ -146,20 +174,13 @@ class Berimbau {
     if (!T) return;
     const ppq = T.getTransport().PPQ;
     this.part?.dispose();
-    this.part = new T.Part<{ time: string; stroke: Stroke }>(
-      (time, event) => this.strike(event.stroke, time),
-      this.toque.pattern.map((p) => ({ time: `${Math.round(p.beat * ppq)}i`, stroke: p.stroke })),
+    this.part = new T.Part<BarEvent & { time: string }>(
+      (time, event) => this.strike(event, time),
+      barEvents(this.toque).map((event) => ({ ...event, time: `${Math.round(event.beat * ppq)}i` })),
     );
     this.part.loop = true;
     this.part.loopEnd = `${BEATS_PER_BAR * ppq}i`;
     this.part.start(0);
-    if (!this.shaker) {
-      this.shaker = new T.Loop((time) => {
-        // Accent on the beat, lighter off the beat.
-        const eighth = Math.round(T.getTransport().getTicksAtTime(time) / (ppq / 2));
-        this.voice!.caxixi.triggerAttackRelease(0.06, time, eighth % 2 === 0 ? 1 : 0.55);
-      }, "8n").start(0);
-    }
   }
 }
 
