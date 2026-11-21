@@ -11,7 +11,7 @@ body:
     id: description
     attributes:
       label: Description
-      description: What is wrong. For a movement, say which one (ginga, martelo, bênção, esquiva, fall, get-up) and the tempo.
+      description: What is wrong. For a movement, say which one (the ginga or a move button) and the toque or tempo.
     validations:
       required: true
   - type: textarea
@@ -19,8 +19,8 @@ body:
     attributes:
       label: Steps to Reproduce
       placeholder: |
-        1. Open the app and switch on "Física real (ML)"
-        2. Press `1` at 96 bpm
+        1. Open the app and pick São Bento Grande
+        2. Press `1` (Meia-lua de frente)
         3. See the body fall
     validations:
       required: true
