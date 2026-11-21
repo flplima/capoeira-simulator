@@ -104,20 +104,38 @@ function checkDocsToScripts() {
   }
 }
 
+/** Reports the first line matching `lineRe` in every indexed file whose path matches `pathRe`. */
+function checkLines(pathRe, lineRe, report) {
+  for (const { relPath } of indexedFileSizes()) {
+    if (!pathRe.test(relPath)) continue;
+    const content = fs.readFileSync(path.join(root, relPath), 'utf8');
+    const hit = content.split('\n').findIndex((line) => lineRe.test(line));
+    if (hit >= 0) errors.push(report(`${relPath}:${hit + 1}`));
+  }
+}
+
 /** No skipped tests in the suite (the vitest equivalent of jest/no-disabled-tests). */
 function checkSkippedTests() {
-  const re = /\b(?:it|test|describe)\.(?:skip|todo)\b|\bx(?:it|test|describe)\(/;
-  for (const { relPath } of indexedFileSizes()) {
-    if (!/^test\/.*\.test\.tsx?$/.test(relPath)) continue;
-    const content = fs.readFileSync(path.join(root, relPath), 'utf8');
-    const hit = content.split('\n').findIndex((line) => re.test(line));
-    if (hit >= 0) errors.push(`[tests] ${relPath}:${hit + 1} commits a skipped test. Fix it or delete it.`);
-  }
+  checkLines(
+    /^test\/.*\.test\.tsx?$/,
+    /\b(?:it|test|describe)\.(?:skip|todo)\b|\bx(?:it|test|describe)\(/,
+    (at) => `[tests] ${at} commits a skipped test. Fix it or delete it.`,
+  );
+}
+
+/** No HTML built from strings in the app: the public demo takes URL parameters, so text goes in as text. */
+function checkHtmlSinks() {
+  checkLines(
+    /^src\/.*\.tsx?$/,
+    /\.(?:inner|outer)HTML\s*=|insertAdjacentHTML|dangerouslySetInnerHTML|document\.write/,
+    (at) => `[html] ${at} builds HTML from a string. Use textContent or React elements.`,
+  );
 }
 
 checkFileTokenLimit();
 checkDocsToScripts();
 checkSkippedTests();
+checkHtmlSinks();
 
 if (errors.length > 0) {
   console.error('Repo policy checks failed:\n');

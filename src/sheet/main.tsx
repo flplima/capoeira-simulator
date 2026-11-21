@@ -116,6 +116,10 @@ async function main() {
   );
 }
 
+// The message can carry the ?m= the visitor typed, so it goes in as text, never as HTML.
 main().catch((e) => {
-  document.body.innerHTML = `<pre style="color:#b00;white-space:pre-wrap">${String(e?.message ?? e)}</pre>`;
+  const pre = document.createElement("pre");
+  pre.style.cssText = "color:#b00;white-space:pre-wrap";
+  pre.textContent = String(e?.message ?? e);
+  document.body.replaceChildren(pre);
 });
