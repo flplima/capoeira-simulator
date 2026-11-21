@@ -4,7 +4,7 @@
 
 Can a machine learn capoeira?
 
-<!-- demo video: the link GitHub gives the uploaded capoeira-demo.mp4 goes here -->
+https://github.com/user-attachments/assets/dfddc6f9-33ba-4223-b176-dea17ac0d75b
 
 Sound on! The berimbau is synthesized in your browser too.
 
