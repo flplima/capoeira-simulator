@@ -6,19 +6,11 @@ Can a machine learn capoeira?
 
 https://github.com/user-attachments/assets/dfddc6f9-33ba-4223-b176-dea17ac0d75b
 
-Sound on! The berimbau is synthesized in your browser too.
-
 Try it in your browser: **[flplima.github.io/capoeira-simulator](https://flplima.github.io/capoeira-simulator/)**
-
-> [!WARNING]
-> _Early days, and entirely vibe-coded. The body still falls more than any capoeirista would._
 
 ## what is it?
 
-A 70 kg mannequin in [MuJoCo](https://mujoco.org), the physics engine,
-running in your browser. Neural networks move it. They learned by trial and error to imitate a
-capoeirista on video (reinforcement learning, in the
-[DeepMimic](https://github.com/xbpeng/DeepMimic) style).
+A 70 kg mannequin in [MuJoCo](https://mujoco.org), the physics engine, running in your browser. Neural networks move it. They learned by trial and error to imitate a capoeirista on video (reinforcement learning, in the [DeepMimic](https://github.com/xbpeng/DeepMimic) style).
 
 ## how it works
 
@@ -52,11 +44,7 @@ flowchart TD
     mujoco -->|0.03 s later| state
 ```
 
-The training pipeline lives in [`ml/`](ml/README.md) (Python, docs in
-Portuguese). The app is Vite, React and Three.js, and `src/sim/` re-runs the
-same environment as `ml/env.py`, checked against it in `npm test`. The rig,
-the berimbau, the movement files and the training are in
-[docs/how-it-works.md](docs/how-it-works.md).
+The training pipeline lives in [`ml/`](ml/README.md). The app is Vite, React and Three.js, and `src/sim/` re-runs the same environment as `ml/env.py`, checked against it in `npm test`. The rig, the berimbau, the movement files and the training are in [docs/how-it-works.md](docs/how-it-works.md).
 
 ## credits and licences
 
