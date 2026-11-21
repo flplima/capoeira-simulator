@@ -92,4 +92,6 @@ CI.
 
 ## licença
 
-[MIT](LICENSE), para o código.
+[MIT](LICENSE) para o código. Os dados em `public/data/` e `test/fixtures/`
+são [CC BY-NC 4.0](public/data/README.md), para uso não comercial (o texto
+está em inglês).

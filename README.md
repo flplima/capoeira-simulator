@@ -84,4 +84,5 @@ command that runs it locally.
 
 ## licence
 
-[MIT](LICENSE), for the code.
+[MIT](LICENSE) for the code. The data in `public/data/` and `test/fixtures/`
+is [CC BY-NC 4.0](public/data/README.md), for non-commercial use.
