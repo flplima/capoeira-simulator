@@ -6,12 +6,7 @@ Uma máquina consegue aprender capoeira?
 
 https://github.com/user-attachments/assets/dfddc6f9-33ba-4223-b176-dea17ac0d75b
 
-Som ligado! O berimbau também é sintetizado no seu navegador.
-
 Experimente no navegador: **[flplima.github.io/capoeira-simulator](https://flplima.github.io/capoeira-simulator/?lang=pt)**
-
-> [!WARNING]
-> _Ainda no começo, e todo feito no vibe coding. O corpo ainda cai mais do que qualquer capoeirista._
 
 ## o que é?
 
@@ -52,7 +47,7 @@ flowchart TD
     mujoco -->|0,03 s depois| state
 ```
 
-O treino fica em [`ml/`](ml/README.md) (Python, documentação em português). O
+O treino fica em [`ml/`](ml/README.md). O
 app é Vite, React e Three.js, e o `src/sim/` roda o mesmo ambiente do
 `ml/env.py`, conferido contra ele no `npm test`. O rig, o berimbau, os
 arquivos de movimento e o treino estão em
