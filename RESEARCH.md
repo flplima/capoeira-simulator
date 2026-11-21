@@ -68,7 +68,7 @@ Esses quadros-chave são o ponto de partida das referências que o treino
 imita (o martelo veio depois de um vídeo, ver o [README](README.pt-BR.md#créditos-e-licenças)).
 Nem todo arquivo virou um movimento no app: o app só oferece os que o corpo
 simulado termina de pé quase sempre, e a lista está em
-[o que ele já faz](README.pt-BR.md#o-que-ele-já-faz). Os movimentos dos 20 que
+[`src/offered.ts`](src/offered.ts). Os movimentos dos 20 que
 não têm arquivo estão no histórico do git.
 
 As poses são uma ilustração para aprender as formas, não substituem um

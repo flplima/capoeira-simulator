@@ -22,15 +22,34 @@ capoeirista on video (reinforcement learning, in the
 
 ## how it works
 
+Training, on Modal's GPUs:
+
+```mermaid
+flowchart TD
+    video["a capoeirista on video"]
+    pose["3D pose"]
+    angles["the mannequin's joint angles"]
+    refs["reference motions"]
+    ppo["PPO on Modal's GPUs"]
+    files["public/data/sim/ginga/"]
+    video --> pose --> angles --> refs --> ppo
+    ppo -->|export| files
 ```
-video ──► 3D pose ──► the mannequin's joint angles ──► reference motions
-                                                              │
-                                    PPO on Modal's GPUs ◄─────┘
-                                              │
-public/data/sim/ginga/ ◄──── export ──────────┘
-        │
-        ▼
-the browser: every 0.03 s, body state ──► network ──► joint targets ──► MuJoCo
+
+In your browser, every 0.03 s:
+
+```mermaid
+flowchart TD
+    files["the networks, from public/data/sim/ginga/"]
+    bar["the berimbau's bar"]
+    state["body state"]
+    net["network: ginga, kicks, esquiva or recovery"]
+    targets["joint targets"]
+    mujoco["MuJoCo"]
+    files --> net
+    bar --> net
+    state --> net --> targets --> mujoco
+    mujoco -->|0.03 s later| state
 ```
 
 The training pipeline lives in [`ml/`](ml/README.md) (Python, docs in

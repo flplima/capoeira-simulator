@@ -8,7 +8,7 @@ berimbau. Nada é gravado: o navegador roda o próprio MuJoCo (WebAssembly) e
 as redes, e o corpo decide cada movimento em tempo real. Do meio da ginga, o
 corpo também solta golpes e esquivas quando pedido e volta à ginga; a perna e
 o momento de entrar também vêm do treino. Os movimentos que o app oferece
-hoje estão no [README](../README.pt-BR.md#o-que-ele-já-faz).
+hoje estão em [`src/offered.ts`](../src/offered.ts).
 
 ## Pipeline
 
