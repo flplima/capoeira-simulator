@@ -3,3 +3,10 @@ models/
 data/
 runs/
 __pycache__/
+# What the commands in README.md write next to the code: renders, recordings, checkpoints.
+*.png
+*.mp4
+*.npz
+*.npy
+*.pt
+*.pkl

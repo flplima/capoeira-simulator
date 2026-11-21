@@ -10,7 +10,7 @@ See [README.md](README.md) for the app and [ml/README.md](ml/README.md) for the 
 
 | Want | Do | Notes |
 | --- | --- | --- |
-| The dev server | `npm run dev` | Port from `PORT` (3895); `.envrc` (untracked) provides the environment, see `.envrc.example` |
+| The dev server | `npm run dev` | Port from `PORT` (3895); `.envrc` (untracked) provides the environment, see `.envrc.example`. Only this machine by default: `npm run dev -- --host` opens it to the network |
 | Drive the app | `agent-browser --session <slug> open http://localhost:3895` | Launched muted so the berimbau isn't heard |
 | Type-check, tests, build | `npx tsc -b`, `npx vitest run`, `npm run build` | |
 | The pipeline | `cd ml && uv run python <script>.py` | Everything in `ml/` runs from that folder |
@@ -64,7 +64,7 @@ A broken `main` stops everyone. If CI turns red on `main`, land a fix, revert th
 
 ### Before pushing
 
-`npm run check:fast` is the floor (policy, `tsc -b`, vitest, Python compile). Then run the local equivalent of every CI job your diff touches — [docs/CI-TRIAGE.md](docs/CI-TRIAGE.md) has the table. The pre-push hook runs `tsc -b` and vitest; `CAPOEIRA_SKIP_PREPUSH=1 git push` skips it for a genuine emergency.
+`npm run check:fast` is the floor (policy, `tsc -b`, vitest, Python compile). Then run the local equivalent of every CI job your diff touches — [docs/CI-TRIAGE.md](docs/CI-TRIAGE.md) has the table. The pre-push hook runs `tsc -b` and vitest; `CAPOEIRA_SKIP_PREPUSH=1 git push` skips it for a genuine emergency. `npm install` copies the hooks from `.github/` into `.git/hooks` (`bin/install-hooks.mjs`), so rerun it after a hook changes.
 
 ## Documentation
 
