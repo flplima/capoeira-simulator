@@ -69,7 +69,7 @@ A broken `main` stops everyone. If CI turns red on `main`, land a fix, revert th
 ## Documentation
 
 - **No project-specific code in docs**: describe architecture and conventions in prose and tables; reference file paths instead of pasting code.
-- **Use ASCII diagrams, not Mermaid.**
+- **Diagrams are Mermaid (vertical, `flowchart TD`) or ASCII.** GitHub draws Mermaid in markdown; the READMEs use it.
 - **One instruction file**: this `AGENTS.md` is the only one; `CLAUDE.md` just imports it.
 
 ## Git
