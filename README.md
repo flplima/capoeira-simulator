@@ -16,54 +16,9 @@ Try it in your browser: **[flplima.github.io/capoeira-simulator](https://flplima
 ## what is it?
 
 A 70 kg mannequin in [MuJoCo](https://mujoco.org), the physics engine,
-running in your browser. Its joints have torque limits, like muscles. Nothing
-in the video is an animation.
-
-Neural networks move it. They learned by trial and error to imitate a
+running in your browser. Neural networks move it. They learned by trial and error to imitate a
 capoeirista on video (reinforcement learning, in the
-[DeepMimic](https://github.com/xbpeng/DeepMimic) style). Every 0.03 s a
-network looks at the body and picks targets for the joints, and physics does
-the rest. So the ginga follows the berimbau and never loops.
-
-Ask for a move at any time. The body picks the leg and the moment to leave
-the ginga, does the move and goes back to the ginga.
-
-## what it can do today
-
-| Key | Move | Ends standing |
-| --- | --- | --- |
-| <kbd>1</kbd> | Meia-lua de frente | 165 of 180 |
-| <kbd>2</kbd> | Joelhada | 172 of 180 |
-| <kbd>3</kbd> | Esquiva lateral | 176 of 180 |
-| <kbd>4</kbd> | Cocorinha | 169 of 180 |
-| <kbd>5</kbd> | Giro de base | 180 of 180 |
-
-That's 60 tries at each of the three toques, from 72 to 120 bpm. A move gets
-into the app when it ends standing nine times in ten and looks like the move.
-Nine more are trained and wait outside until they pass that bar: the list
-and their numbers are in [docs/how-it-works.md](docs/how-it-works.md#moves-still-out-of-the-app).
-
-## how it compares
-
-| | keyframe animation | motion capture | capoeira simulator |
-|---|---|---|---|
-| where the motion comes from | an animator poses it | a recording of a real person | a network that learned from a video |
-| weight and balance | drawn | recorded | simulated: 70 kg, torque-limited joints |
-| follows the berimbau's tempo | if someone re-times it | if someone re-times it | ✓, from 70 to 120 bpm |
-| loops | ✓ | ✓ | ✗ |
-| can fall | ✗ | ✗ | ✓ (more than it should) |
-
-## running it
-
-```bash
-npm install
-npm run dev        # → http://localhost:3895
-npm test           # the simulation against Python, the movement files, the rig
-```
-
-The page opens in English, and the flags switch it to Portuguese. The keys
-are under the buttons: <kbd>1</kbd> to <kbd>5</kbd> for the moves,
-<kbd>WASD</kbd> to walk, <kbd>O</kbd> to circle the roda.
+[DeepMimic](https://github.com/xbpeng/DeepMimic) style).
 
 ## how it works
 
@@ -83,22 +38,6 @@ Portuguese). The app is Vite, React and Three.js, and `src/sim/` re-runs the
 same environment as `ml/env.py`, checked against it in `npm test`. The rig,
 the berimbau, the movement files and the training are in
 [docs/how-it-works.md](docs/how-it-works.md).
-
-## next steps
-
-1. **Getting up after a fall.** The recovery network gets up 0 of 29 times,
-   so today the app stands the body up again after 1.2 s.
-2. **Bring back the moves left out**, starting with the martelo, the one
-   learned from video. It falls on the landing about one time in four.
-3. **More moves from video, on both legs**: queixada and armada, from the
-   same slow-motion series as the martelo.
-4. **One network for every clip** instead of one per skill. The hand-offs
-   between networks are where the body falls.
-5. **A guide to adding a move from your own video.** Slow motion or 60 fps,
-   the whole body in frame, from the ginga back to the ginga.
-
-All of this runs on Modal's US$ 30 monthly credit. Making it work on that
-budget is part of the fun.
 
 ## credits and licences
 
