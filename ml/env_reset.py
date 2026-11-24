@@ -10,9 +10,7 @@ from env_consts import (
     FALL_SPEEDS,
     FALL_TIME,
     GINGA_FIRST,
-    KICK_MOVES,
     LANDINGS,
-    SKILL_MOVES,
 )
 from env_math import place_pose
 
@@ -63,9 +61,8 @@ class EpisodeReset:
             self.choreo.kicks.level = options["level"]
         move = options.get("move")
         rsi = 0.3 if self.vary_moves else 0.0
-        practice = SKILL_MOVES.get(self.skill, KICK_MOVES)
         if move is None and "moves" not in options and (self.skill in ("kicks", "esquiva") or self.rng.random() < rsi):
-            move = practice[self.rng.integers(len(practice))]
+            move = self.practice[self.rng.integers(len(self.practice))]
         anchor = options.get("anchor")
         noisy = False
         if move is not None and self.skill in ("kicks", "esquiva") and "kick_t" not in options and self.rng.random() < GINGA_FIRST:

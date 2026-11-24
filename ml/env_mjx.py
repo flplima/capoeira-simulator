@@ -12,7 +12,7 @@ import jax.numpy as jnp
 from mujoco import mjx
 import numpy as np
 
-from env_consts import ALLOWED_CONTACT, EFFECTORS, EXTRA_MOVES, FRAME_SKIP, GROUND_SITES, KICK_MOVES, KNEE_CLEAR, MOVES, NEVER_CONTACT
+from env_consts import ALLOWED_CONTACT, EFFECTORS, EXTRA_MOVES, FRAME_SKIP, GROUND_SITES, KICK_MOVES, KNEE_CLEAR, MOVES, NEVER_CONTACT, SKILL_MOVES, practice_moves
 from mjx_model import load_mjx_model
 from mjx_reset import MjxReset
 from mjx_step import MjxStep
@@ -81,16 +81,8 @@ class MjxGingaEnv(MjxTarget, MjxReset, MjxStep):
         self.num_kicks = len(KICK_MOVES)
         self.esquiva_move_id = int(MOVES.index("esquiva"))
         self.extra_move_ids = jnp.asarray([MOVES.index(m) for m in EXTRA_MOVES], jnp.int32)
-        if skill == "kicks":
-            self.skill_moves = jnp.arange(len(KICK_MOVES), dtype=jnp.int32)
-        elif skill == "esquiva":
-            self.skill_moves = jnp.arange(len(KICK_MOVES), len(MOVES), dtype=jnp.int32)
-        else:
-            self.skill_moves = jnp.arange(len(MOVES), dtype=jnp.int32)
-        if focus:  # half the draws go to this move, the rest are shared as before
-            self.skill_moves = jnp.concatenate([self.skill_moves, jnp.full(len(self.skill_moves), MOVES.index(focus), jnp.int32)])
-        if only:  # every draw goes to this move
-            self.skill_moves = jnp.array([MOVES.index(only)], jnp.int32)
+        practice = practice_moves(SKILL_MOVES.get(skill, MOVES), focus, only)
+        self.skill_moves = jnp.array([MOVES.index(move) for move in practice], jnp.int32)
 
         self.obs_size = 138 + len(EXTRA_MOVES)
         self.act_size = int(self.m.nu)

@@ -49,6 +49,15 @@ SIGMA_ROWS = 1 + 2 * len(MOVES)  # tolerance rows: the ginga, then each move on 
 EXTRA_MOVES = ["meia-lua-de-frente", "queixada", "ponteira", "joelhada", "meia-lua-de-compasso", "esquiva-baixa", "cocorinha"]
 # What each practice skill asks for (GingaEnv skill), and which network plays each move (brain.py).
 SKILL_MOVES = {"kicks": KICK_MOVES, "esquiva": DODGES, "all": MOVES}
+
+
+def practice_moves(moves: list[str], focus: str = "", only: str = "") -> list[str]:
+    """The moves an episode draws from, uniformly: `only` alone, or `focus` in half of the draws and `moves` in the rest."""
+    if only:
+        return [only]
+    return moves + [focus] * len(moves) if focus else moves
+
+
 # A kick (or an esquiva) blends in from the ginga over BLEND_IN seconds and back out over BLEND_OUT.
 BLEND_IN, BLEND_OUT = 0.35, 0.35
 # Where in the ginga cycle each leg can start a kick: around the base with that leg back.

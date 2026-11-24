@@ -66,8 +66,9 @@ nohup uv run python train_mjx.py --skill <skill> --out runs/<out> \
   > runs/<out>/stdout.txt 2> runs/<out>/stderr.txt &
 ```
 
-(`train.py` takes the same flags plus `--envs 10`, and is the choice when JAX is
-not available.) The Modal run name is the last part of `--out`; use the next free
+(`train.py` is the choice when JAX is not available or on a CPU, where it is several
+times faster than `train_mjx.py`: it takes `--envs 12`, `--focus`, `--only` and
+`--start-size`, its kick sizes grow only on success, and it has no `--mirror`.) The Modal run name is the last part of `--out`; use the next free
 number and never reuse one that exists in the volume or in `runs/`.
 
 When the trial ends: bring it home (below), read its log, run the matching
