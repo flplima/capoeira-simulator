@@ -1,6 +1,7 @@
 """Train the ginga imitation policy with PPO.
 
     uv run python train.py [--steps 30e6] [--envs 12] [--out runs/ginga] [--init runs/old/last.pt]
+        [--skill kicks --start-size 3 --focus bencao]
 
 Proximal Policy Optimization (Schulman et al., 2017) with generalized
 advantage estimation, a Gaussian policy and a separate value network, both
@@ -73,8 +74,8 @@ class Agent(nn.Module):
         return self.critic(obs).squeeze(-1)
 
 
-def make_env(seed: int, skill: str):
-    return lambda: GingaEnv(seed=seed, max_seconds=40.0, skill=skill)
+def make_env(seed: int, args: argparse.Namespace):
+    return lambda: GingaEnv(seed=seed, max_seconds=40.0, skill=args.skill, focus=args.focus, only=args.only, start_size=args.start_size)
 
 
 def warm_start(agent: Agent, norm: "RunningNorm", path: str, log_std: float) -> None:
@@ -103,13 +104,16 @@ def main() -> None:
     parser.add_argument("--skill", default="all", choices=["all", "ginga", "kicks", "esquiva", "recover"], help="what the episodes practise (see GingaEnv)")
     parser.add_argument("--lr", type=float, default=3e-4, help="learning rate (lower to polish a trained policy)")
     parser.add_argument("--log-std", type=float, default=-2.3, help="exploration noise when starting from --init")
+    parser.add_argument("--start-size", type=int, default=0, help="kick size the curriculum starts at (it grows on success)")
+    parser.add_argument("--focus", default="", help="a move that gets half of the practice (a new or changed one)")
+    parser.add_argument("--only", default="", help="the one move practised (a new kick learned on its own)")
     args = parser.parse_args()
     out = Path(args.out)
     out.mkdir(parents=True, exist_ok=True)
     torch.set_num_threads(2)
 
     envs = gym.vector.AsyncVectorEnv(
-        [make_env(i, args.skill) for i in range(args.envs)], autoreset_mode=gym.vector.AutoresetMode.SAME_STEP
+        [make_env(i, args) for i in range(args.envs)], autoreset_mode=gym.vector.AutoresetMode.SAME_STEP
     )
     obs_size = envs.single_observation_space.shape[0]
     act_size = envs.single_action_space.shape[0]

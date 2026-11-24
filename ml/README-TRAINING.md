@@ -49,7 +49,9 @@ Continuação do [pipeline](README.md#pipeline): a recompensa, o treino, o naveg
   caía logo depois, com o golpe já contado. O tamanho do golpe sobe quando 70 % termina de pé ou, no máximo, a
   cada 18 % do tempo, e aos 75 % vai ao tamanho inteiro; `--gated` tira o
   relógio e o tamanho só sobe com o acerto, para um golpe novo. `--focus`
-  dá metade dos golpes a um movimento, `--only` dá todos. `--mirror` soma à
+  dá metade dos golpes a um movimento, `--only` dá todos. O `train.py` aceita
+  `--focus`, `--only` e `--start-size`; nele o tamanho de cada simulação só
+  sobe com o acerto (75 % de pé), sem relógio. `--mirror` soma à
   perda do PPO uma perda de simetria (`env_mirror.py`, `train_ppo.py`): a
   referência da ginga é o próprio espelho meio ciclo adiante, o triângulo é
   simétrico e a perna esquerda de cada golpe espelha a direita, então a rede

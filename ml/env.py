@@ -54,6 +54,7 @@ from env_consts import (
     TEMPO_CHANGE_EVERY,
     TEMPO_SKEW,
     TERMS,
+    practice_moves,
     TROUBLE_DROP,
     TROUBLE_TILT,
     WAIT_FROM,
@@ -79,12 +80,17 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
         max_seconds: float = 20.0,
         seed: int | None = None,
         skill: str = "all",
+        focus: str = "",
+        only: str = "",
+        start_size: int = 0,
     ):
         """skill: what episodes practise — "ginga" (no kicks), "kicks" (one kick per
         episode, from the ginga and back to it), "esquiva" (the same with an esquiva lateral), "recover" (falling from a lost balance
         — see falls.py — or starting partway, getting up and gingando on), or "all"
-        (kicks asked for at random)."""
+        (kicks asked for at random). focus: a move that gets half of the practice; only: the one move practised;
+        start_size: the kick size the curriculum starts at."""
         self.skill = skill
+        self.practice = practice_moves(SKILL_MOVES.get(skill, KICK_MOVES), focus, only)
         self.m = mujoco.MjModel.from_xml_path(xml)
         self.d = mujoco.MjData(self.m)
         self.ref = Reference(reference, self.m)
@@ -97,9 +103,8 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
         self.choreo.arms = [
             int(self.m.jnt_qposadr[j]) for j in range(self.m.njnt) if self.m.joint(j).name.startswith(("shoulder", "elbow"))
         ]
-        # Kick-size curriculum (skill "kicks"): each environment starts with the
-        # smallest kick and moves up a size once it finishes most of its kicks.
-        self.curriculum = 0
+        # Kick-size curriculum (skill "kicks"): each environment moves up a size once it finishes most of its kicks.
+        self.curriculum = min(start_size, len(self.choreo.kicks.amplitudes) - 1)
         self.success = 0.0
         self.attempts = 0
         self.vary_moves = True
@@ -392,5 +397,4 @@ class GingaEnv(EpisodeReset, RewardTerms, gym.Env):
         if self.vary_moves and not self.choreo.busy and self.rng.random() < self.control_dt / KICK_EVERY:
             side = "lr"[self.rng.integers(2)]
             entry = ENTRY_CENTRE[side] + self.rng.uniform(-ENTRY_WINDOW, ENTRY_WINDOW)
-            practice = SKILL_MOVES.get(self.skill, KICK_MOVES)
-            self.choreo.schedule(practice[self.rng.integers(len(practice))], side, entry)
+            self.choreo.schedule(self.practice[self.rng.integers(len(self.practice))], side, entry)
