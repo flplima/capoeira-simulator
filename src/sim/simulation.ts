@@ -10,7 +10,6 @@ import { activeNetwork, decide } from "./policy";
 import { poseRig } from "./pose";
 import { available, request, requestManeuver } from "./requests";
 import { wrap } from "./math";
-import { MOVE_NETWORK } from "./types";
 import type { Landing, LiveFiles, Maneuver, Move, Placement, Side } from "./types";
 
 // The ginga, live: the trained policy from ml/ drives a MuJoCo simulation of
@@ -223,7 +222,7 @@ export class LiveGinga {
   ) {
     this.sinceKick = sinceKick;
     this.sinceRecover = sinceRecover;
-    this.mover = move && MOVE_NETWORK[move];
+    this.mover = (move && this.files.policy.moveNetworks[move]) ?? null;
     this.anchor = [...anchor];
     this.placement = [...placement];
     this.recover = recover && { ...recover, onset: [...recover.onset], place: [...recover.place] };
@@ -306,13 +305,13 @@ export class LiveGinga {
   sinceRecover = Infinity;
 
   /** The network that played the last kick or esquiva (Brain.mover). */
-  mover: "kicks" | "esquiva" | null = null;
+  mover: string | null = null;
 
   /** One control step: observe, decide, set the PD targets, simulate 0.03 s, move the cycle on. */
   control() {
     const { mujoco, model: m, data: d, files } = this;
     const obs = this.observe();
-    if (this.move) this.mover = MOVE_NETWORK[this.move];
+    if (this.move) this.mover = files.policy.moveNetworks[this.move] ?? null;
     this.sinceKick = this.move ? 0 : this.sinceKick + this.controlDt;
     this.sinceRecover = this.recover ? 0 : this.sinceRecover + this.controlDt;
     const action = this.decide(obs);
@@ -368,7 +367,7 @@ export class LiveGinga {
     return activeNetwork(this);
   }
 
-  decide(obs: Float64Array, name: "ginga" | "kicks" | "recover" | "esquiva" = this.network) {
+  decide(obs: Float64Array, name: string = this.network) {
     return decide(this, obs, name);
   }
 

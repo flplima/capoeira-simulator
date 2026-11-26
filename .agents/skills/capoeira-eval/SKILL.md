@@ -191,6 +191,12 @@ uv run python export_web.py runs/expert_ginga6/last.pt ../public/data/sim/ginga 
 cd .. && npx vitest run && npm run build                                               # the browser port must match Python
 ```
 
+`--kicks` takes one checkpoint for every kick, then `move=checkpoint` for each kick played by a
+network of its own: `--kicks runs/a/last.pt,martelo=runs/b/last.pt`, the same in `check.py`,
+`choose.py` and `export_web.py`. A network that practises every kick loses one as it gains
+another (`--focus bencao` took the martelo from 13/15 to 0/17), so a kick that needs work is
+trained alone (`--only <kick>`) and shipped as its own network.
+
 `export_web.py` rewrites `test/fixtures/ginga-live.json`; if `test/live.test.ts`
 then fails, the TypeScript port (`src/sim/simulation.ts`) and `env.py` disagree —
 report it, don't paper over it.

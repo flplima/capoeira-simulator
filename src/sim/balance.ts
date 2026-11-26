@@ -1,7 +1,6 @@
 import { target } from "./choreography";
 import { beginRecover, contacts } from "./floor";
 import { quatMatrix, wrap } from "./math";
-import { MOVE_NETWORK } from "./types";
 import type { LiveGinga } from "./simulation";
 
 /** How long the body may lie on the floor before it is stood back up. */
@@ -46,7 +45,7 @@ export function trouble(g: LiveGinga) {
 /** Hips or head too low for anything but a fall (GingaEnv.low), against the reference pose `ref`. */
 export function low(g: LiveGinga, ref: ArrayLike<number>) {
   const { hips, head, below } = g.files.policy.low ?? { hips: 0.4, head: 0.8, below: 0.3 };
-  const headBelow = g.move && MOVE_NETWORK[g.move] === "esquiva" ? below + 0.08 : below;
+  const headBelow = g.move && g.files.policy.moveNetworks[g.move] === "esquiva" ? below + 0.08 : below;
   (g.groundData.qpos as Float64Array).set(ref);
   g.mujoco.mj_kinematics(g.model, g.groundData);
   const refHead = (g.groundData.xpos as Float64Array)[3 * g.headId + 1];

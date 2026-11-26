@@ -1,15 +1,14 @@
 import { clip } from "./choreography";
 import { wrap } from "./math";
-import { MOVE_NETWORK, type Maneuver, type Move, type Side } from "./types";
+import type { Maneuver, Move, Side } from "./types";
 import type { LiveGinga } from "./simulation";
 
 // Where each leg can start a kick, as in ml/env.py: the base with that leg back.
 const ENTRY_CENTRE: Record<Side, number> = { r: 0, l: 0.5 };
 
-/** Whether a move can be asked for: the kicks always (when present in the reference), the dodges only with
- * their own network and reference. */
+/** Whether a move can be asked for: a network plays it and the reference holds it. */
 export function available(g: LiveGinga, move: Move) {
-  return (MOVE_NETWORK[move] === "kicks" || !!g.files.policy.networks.esquiva) && !!clip(g, move, "r");
+  return !!g.files.policy.moveNetworks[move] && !!clip(g, move, "r");
 }
 
 /** Request a standing maneuver (giro-de-base). */

@@ -31,7 +31,7 @@ TOQUES = [("Angola", 66.0), ("São Bento Pequeno", 90.0), ("São Bento Grande", 
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint")
-    parser.add_argument("--kicks", help="kick network")
+    parser.add_argument("--kicks", help="kick network, then move=checkpoint for a kick with its own (brain.kick_networks)")
     parser.add_argument("--esquiva", help="esquiva network")
     parser.add_argument("--moves", help="moves to ask for, in turn (default: those with a network)")
     parser.add_argument("--minutes", type=float, default=3.0)
