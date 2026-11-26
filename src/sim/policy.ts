@@ -1,8 +1,8 @@
 import type { LiveGinga } from "./simulation";
 
-/** The network in charge (Brain.network): the recovery network while down and a moment after, the kick (or
- * esquiva) network from the start of a kick (or esquiva) until a moment after it, else the ginga network. */
-export function activeNetwork(g: LiveGinga): "ginga" | "kicks" | "recover" | "esquiva" {
+/** The network in charge (Brain.network): the recovery network while down and a moment after, the network of a
+ * kick (or esquiva) from its start until a moment after it, else the ginga network. */
+export function activeNetwork(g: LiveGinga): string {
   const { networks, handback, handbackKicks, handbackEsquiva } = g.files.policy;
   if (networks.recover && g.sinceRecover < handback) return "recover";
   const moverHandback = (g.mover === "esquiva" ? handbackEsquiva : handbackKicks) ?? handback;
@@ -11,7 +11,7 @@ export function activeNetwork(g: LiveGinga): "ginga" | "kicks" | "recover" | "es
 
 /** A network's mean action for an observation (actor MLP, ELU between layers). Each network reads as
  * many inputs as it was trained on: later skills appended theirs at the end. */
-export function decide(g: LiveGinga, obs: Float64Array, name: "ginga" | "kicks" | "recover" | "esquiva" = g.network): Float64Array {
+export function decide(g: LiveGinga, obs: Float64Array, name: string = g.network): Float64Array {
   const { policy, weights } = g.files;
   const net = policy.networks[name]!;
   let x = g.input;

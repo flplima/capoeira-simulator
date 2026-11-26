@@ -68,7 +68,7 @@ def main() -> None:
     parser.add_argument("out")
     parser.add_argument("--fixture", default="../test/fixtures/ginga-live.json")
     parser.add_argument("--choices", default="data/choices.json", help="from choose.py")
-    parser.add_argument("--kicks", help="kick network checkpoint")
+    parser.add_argument("--kicks", help="kick network checkpoint, then move=checkpoint for a kick with its own (brain.kick_networks)")
     parser.add_argument("--recover", help="recovery network checkpoint")
     parser.add_argument("--esquiva", help="esquiva network checkpoint")
     parser.add_argument("--size", type=int, help="kick size level to ship (kicks.py AMPLITUDES index; default the full kick)")
@@ -78,9 +78,7 @@ def main() -> None:
 
     brain = Brain(args.checkpoint, args.kicks, args.recover, args.esquiva)
     blobs, networks, offset = [], {}, 0
-    for name, net in (("ginga", brain.ginga), ("kicks", brain.kicks), ("recover", brain.recover), ("esquiva", brain.esquiva)):
-        if net is None:
-            continue
+    for name, net in brain.networks.items():
         layers = []
         for layer in (l for l in net.agent.actor if isinstance(l, torch.nn.Linear)):
             w = layer.weight.detach().numpy().astype(np.float32)
@@ -104,6 +102,7 @@ def main() -> None:
         "obs": int(env.observation_space.shape[0]),
         "act": brain.ginga.act,
         "networks": networks,
+        "moveNetworks": brain.move_network,
         "handback": HANDBACK,
         "handbackKicks": MOVE_HANDBACK,
         "handbackEsquiva": MOVE_HANDBACK,

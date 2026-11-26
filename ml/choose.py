@@ -32,7 +32,7 @@ AFTER = 1.0  # s of ginga after the kick that must stay upright too
 def main() -> None:
     parser = argparse.ArgumentParser()
     parser.add_argument("checkpoint")
-    parser.add_argument("--kicks", help="kick network")
+    parser.add_argument("--kicks", help="kick network, then move=checkpoint for a kick with its own (brain.kick_networks)")
     parser.add_argument("--esquiva", help="esquiva network")
     parser.add_argument("--out", default="data/choices.json")
     parser.add_argument("--size", type=int, help="kick size level (kicks.py AMPLITUDES index; default the full kick)")

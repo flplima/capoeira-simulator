@@ -12,8 +12,11 @@ export interface Network {
 export interface PolicyMeta {
   obs: number;
   act: number;
-  /** The ginga network and, if trained, the kick, recovery and esquiva networks (ml/brain.py). */
-  networks: { ginga: Network; kicks?: Network; recover?: Network; esquiva?: Network };
+  /** The networks by name (ml/brain.py): the ginga's and, if trained, "kicks", "recover", "esquiva" and one per
+   * kick that has its own ("kicks-2"…). */
+  networks: { ginga: Network; [name: string]: Network | undefined };
+  /** The network that plays each move the networks know (Brain.move_network). */
+  moveNetworks: Partial<Record<Move, string>>;
   /** Seconds of ginga after getting up that the recovery network still drives (older exports: also after a kick). */
   handback: number;
   /** …and after a kick or an esquiva, that move's network (older exports: `handback`). */
@@ -77,19 +80,6 @@ export const MOVE_NAMES: Record<Move, string> = {
   esquiva: "Esquiva lateral",
   "esquiva-baixa": "Esquiva baixa",
   cocorinha: "Cocorinha",
-};
-/** Which network plays a move (Brain): the kicks share one, the dodges have their own. */
-export const MOVE_NETWORK: Record<Move, "kicks" | "esquiva"> = {
-  martelo: "kicks",
-  bencao: "kicks",
-  "meia-lua-de-frente": "kicks",
-  queixada: "kicks",
-  ponteira: "kicks",
-  joelhada: "kicks",
-  "meia-lua-de-compasso": "kicks",
-  esquiva: "esquiva",
-  "esquiva-baixa": "esquiva",
-  cocorinha: "esquiva",
 };
 export type Maneuver = "giro-de-base";
 export const MANEUVERS: Maneuver[] = ["giro-de-base"];
