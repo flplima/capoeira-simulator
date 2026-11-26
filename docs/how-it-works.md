@@ -14,9 +14,9 @@ Trained, but out until they pass that bar:
 
 - **Martelo** (the one learned from video): 134 of 180. It falls on the
   landing about one time in four.
-- **Queixada** 147, **troca de base** 142 and **esquiva baixa** 141, of 180.
-- **Ponteira** 67 and **bênção** 29, of 90.
-- **Meia-lua de compasso**: it stands 176 of 180 times, but it is not a
+- **Queixada** 156, **ponteira** 154, **esquiva baixa** 146 and **troca de
+  base** 142, of 180.
+- **Meia-lua de compasso**: it stands 173 of 180 times, but it is not a
   compasso yet. No hands on the floor, no spin.
 - **Rolê** 21 and **passagem de negativa** 2, of 90.
 

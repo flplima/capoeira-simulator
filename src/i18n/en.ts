@@ -43,6 +43,7 @@ export const en = {
   moveHints: {
     "meia-lua-de-frente": "outside-in arc with the leg extended",
     joelhada: "short, direct knee strike",
+    bencao: "straight push with the sole of the foot",
     esquiva: "drops over the front leg, the back leg slides out to the side",
     cocorinha: "compact squat protecting the face",
   },

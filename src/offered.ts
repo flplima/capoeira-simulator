@@ -10,6 +10,7 @@ import type { Maneuver, Move } from "./sim/types";
 export const OFFERED = [
   { kind: "move", id: "meia-lua-de-frente", topic: "meia-lua-de-frente" },
   { kind: "move", id: "joelhada", topic: "joelhada" },
+  { kind: "move", id: "bencao", topic: "bencao" },
   { kind: "move", id: "esquiva", topic: "esquiva-lateral" },
   { kind: "move", id: "cocorinha", topic: "cocorinha" },
   { kind: "maneuver", id: "giro-de-base", topic: "giro-de-base" },

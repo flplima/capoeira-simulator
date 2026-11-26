@@ -4,12 +4,12 @@ import { OFFERED, offeredForKey } from "../src/offered";
 import { DEFAULT_TOQUE, MAX_BPM, MIN_BPM, TOQUES } from "../src/music/toques";
 
 describe("what the app offers", () => {
-  it("is four moves and the giro de base, in that order", () => {
-    expect(OFFERED.map((o) => o.id)).toEqual(["meia-lua-de-frente", "joelhada", "esquiva", "cocorinha", "giro-de-base"]);
+  it("is five moves and the giro de base, in that order", () => {
+    expect(OFFERED.map((o) => o.id)).toEqual(["meia-lua-de-frente", "joelhada", "bencao", "esquiva", "cocorinha", "giro-de-base"]);
   });
 
   it("gives each its info tab, after the ginga", () => {
-    expect(TOPICS).toEqual(["ginga", "meia-lua-de-frente", "joelhada", "esquiva-lateral", "cocorinha", "giro-de-base"]);
+    expect(TOPICS).toEqual(["ginga", "meia-lua-de-frente", "joelhada", "bencao", "esquiva-lateral", "cocorinha", "giro-de-base"]);
   });
 
   it("answers the number keys in the order of the buttons, and nothing past the last", () => {

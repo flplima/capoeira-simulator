@@ -44,6 +44,7 @@ export const pt: Dictionary = {
   moveHints: {
     "meia-lua-de-frente": "arco de fora para dentro com a perna estendida",
     joelhada: "golpe curto e direto com o joelho",
+    bencao: "empurrão reto com a sola do pé",
     esquiva: "desce sobre a perna da frente, a de trás desliza para o lado",
     cocorinha: "agachamento compacto protegendo o rosto",
   },
