@@ -74,11 +74,11 @@ A broken `main` stops everyone. If CI turns red on `main`, land a fix, revert th
 
 ## Git
 
-Every change goes on its own branch, in its own worktree (`.claude/worktrees/<slug>`), and opens a pull request stacked on top of the open ones with `gh stack` (related or not), so the owner reviews and merges the whole stack at once. In a stack the base is the PR below: keep it current with `gh stack sync`, not `git merge main`. A PR stays a draft until CI is green. Never commit or push to `main`, and never merge.
+Commit straight to `main`: `git pull --rebase --autostash`, then push. No feature branch, worktree or pull request unless the owner asks for one. There is no PR to catch a red `main`, so run the checks under *Before pushing* first and watch CI after the push.
 
 **Stage files explicitly — never `git add -A`.** `ml/runs`, `ml/data` and `ml/models` sit next to tracked code; a sweeping add is how private data would get committed.
 
-**Commit and push only your own branch; the PR is how the user reviews it.** Ask before anything else that leaves the machine: a training run on Modal, a deploy.
+**A push that touches the app redeploys the demo.** Ask before a training run on Modal.
 
 Use [gitmoji](https://gitmoji.dev/) for commit messages:
 
